@@ -1,8 +1,8 @@
 import { session } from 'grammy';
-import { SessionData } from '../types.js';
+import { SessionData, BotContext } from '../types.js';
 
 export function createSessionMiddleware() {
-  return session<SessionData, any>({
+  return session<SessionData, BotContext>({
     initial: (): SessionData => ({}),
   });
 }

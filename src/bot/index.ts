@@ -10,6 +10,10 @@ if (!token) {
   throw new Error('BOT_TOKEN is required in .env');
 }
 
+if (!process.env.ALLOWED_TELEGRAM_IDS) {
+  throw new Error('ALLOWED_TELEGRAM_IDS is required in .env');
+}
+
 const bot = new Bot<BotContext>(token);
 
 // Middleware (order matters)
@@ -22,5 +26,9 @@ bot.command('start', async (ctx) => {
   await ctx.reply('ברוך הבא! 👋\nאני הבוט הפיננסי שלך.\nשלח /help לרשימת הפקודות.');
 });
 
-bot.start();
-console.log('Bot is running...');
+bot.start({
+  onStart: () => console.log('Bot is running...'),
+}).catch((err) => {
+  console.error('Bot failed to start:', err);
+  process.exit(1);
+});
