@@ -1,6 +1,6 @@
 import chalk from 'chalk';
+import { visualHebrew } from './rtl.js';
 
-// Simple color map for basic chalk colors
 const colors = {
   black: (text: string) => chalk.black(text),
   red: (text: string) => chalk.red(text),
@@ -16,13 +16,6 @@ const colors = {
 
 type Color = keyof typeof colors;
 
-/**
- * Creates a simple section header with chalk
- * @param title Section title
- * @param emoji Optional emoji to prepend to the title
- * @param color Text color (default: 'blue')
- * @returns Formatted section header
- */
 export function createSection({
   title,
   emoji = '',
@@ -33,43 +26,24 @@ export function createSection({
   color?: Color;
 }): string {
   const emojiPrefix = emoji ? `${emoji}  ` : '';
-  const content = `${emojiPrefix}${title}`.trim();
-
-  // Apply chalk styles
+  const content = visualHebrew(`${emojiPrefix}${title}`.trim());
   const colorFn = colors[color] || colors.blue;
   const coloredContent = colorFn(content);
-
   return `\n${chalk.bold(coloredContent)}\n${'─'.repeat(content.length)}`;
 }
 
-/**
- * Logs a success message
- * @param message Message to display
- */
 export function logSuccess(message: string): void {
-  console.log(chalk.green(`✓ ${message}`));
+  console.log(chalk.green(`✓ ${visualHebrew(message)}`));
 }
 
-/**
- * Logs an info message
- * @param message Message to display
- */
 export function logInfo(message: string): void {
-  console.log(chalk.blue(`ℹ ${message}`));
+  console.log(chalk.blue(`ℹ ${visualHebrew(message)}`));
 }
 
-/**
- * Logs a warning message
- * @param message Message to display
- */
 export function logWarning(message: string): void {
-  console.log(chalk.yellow(`⚠ ${message}`));
+  console.log(chalk.yellow(`⚠ ${visualHebrew(message)}`));
 }
 
-/**
- * Logs an error message
- * @param message Message to display
- */
 export function logError(message: string): void {
-  console.error(chalk.red(`✗ ${message}`));
+  console.error(chalk.red(`✗ ${visualHebrew(message)}`));
 }
