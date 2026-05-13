@@ -4,6 +4,10 @@ import { conversations } from '@grammyjs/conversations';
 import { BotContext } from './types.js';
 import { authMiddleware } from './middleware/auth.js';
 import { createSessionMiddleware } from './middleware/session.js';
+import { DatabaseFactory } from '../services/DatabaseFactory.js';
+import { accountsCommand } from './commands/accounts.js';
+import { reportCommand } from './commands/report.js';
+import { syncCommand } from './commands/sync.js';
 
 const token = process.env.BOT_TOKEN;
 if (!token) {
@@ -22,13 +26,26 @@ bot.use(conversations());
 bot.use(authMiddleware);
 
 // /start command — placeholder until Phase 5 adds the full menu
-bot.command('start', async (ctx) => {
+bot.command('start', async ctx => {
   await ctx.reply('ברוך הבא! 👋\nאני הבוט הפיננסי שלך.\nשלח /help לרשימת הפקודות.');
 });
 
-bot.start({
-  onStart: () => console.log('Bot is running...'),
-}).catch((err) => {
-  console.error('Bot failed to start:', err);
-  process.exit(1);
-});
+// Register commands
+bot.command('accounts', accountsCommand);
+bot.command('report', reportCommand);
+bot.command('sync', syncCommand);
+
+// Initialize DB then start bot
+(async () => {
+  const db = DatabaseFactory.getInstance();
+  await db.initialize();
+
+  bot
+    .start({
+      onStart: () => console.warn('Bot is running...'),
+    })
+    .catch(err => {
+      console.error('Bot failed to start:', err);
+      process.exit(1);
+    });
+})();
