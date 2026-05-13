@@ -21,6 +21,7 @@ import { diagNotify, diagDb, diagMcp } from './commands/diag.js';
 import { ingestCredentials } from './ingestCredentials.js';
 import { configureClaudeIntegration } from '../utils/claudeConfig.js';
 import { sendNotification } from '../utils/notify.js';
+import { visualHebrew } from '../utils/rtl.js';
 
 program.name('fin').description('ממשק ניהול למערכת בֶּרְסַלְיוֹ').version('1.0.0');
 
@@ -213,17 +214,17 @@ if (process.argv.length === 2) {
       {
         type: 'list',
         name: 'action',
-        message: 'מה תרצה לעשות?',
+        message: visualHebrew('מה תרצה לעשות?'),
         choices: [
-          { name: '🚀 הפעל שירות', value: 'start' },
-          { name: '⏹️  עצור שירות', value: 'stop' },
-          { name: '🔄 הפעל מחדש שירות', value: 'restart' },
-          { name: '📊 הצג סטטוס', value: 'status' },
-          { name: '💳 סנכרן עסקאות', value: 'sync' },
-          { name: '⚙️  הגדרות', value: 'setup' },
-          { name: '🔍 אבחון', value: 'diag' },
+          { name: visualHebrew('🚀 הפעל שירות'), value: 'start' },
+          { name: visualHebrew('⏹️  עצור שירות'), value: 'stop' },
+          { name: visualHebrew('🔄 הפעל מחדש שירות'), value: 'restart' },
+          { name: visualHebrew('📊 הצג סטטוס'), value: 'status' },
+          { name: visualHebrew('💳 סנכרן עסקאות'), value: 'sync' },
+          { name: visualHebrew('⚙️  הגדרות'), value: 'setup' },
+          { name: visualHebrew('🔍 אבחון'), value: 'diag' },
           new Separator(), // v9 ESM: import { Separator } from 'inquirer'
-          { name: '❌ יציאה', value: 'exit' },
+          { name: visualHebrew('❌ יציאה'), value: 'exit' },
         ],
       },
     ]);
@@ -245,13 +246,13 @@ if (process.argv.length === 2) {
         {
           type: 'list',
           name: 'service',
-          message: 'איזה שירות?',
+          message: visualHebrew('איזה שירות?'),
           choices: [
             ...Object.entries(SERVICES).map(([key, svc]) => ({
-              name: svc.label,
+              name: visualHebrew(svc.label),
               value: key,
             })),
-            { name: 'כל השירותים', value: 'all' },
+            { name: visualHebrew('כל השירותים'), value: 'all' },
           ],
         },
       ]);
@@ -283,19 +284,19 @@ if (process.argv.length === 2) {
         {
           type: 'list',
           name: 'sub',
-          message: 'הגדרות:',
+          message: visualHebrew('הגדרות:'),
           choices: [
-            { name: 'ייבא פרטי גישה לבנקים', value: 'creds' },
-            { name: 'הגדר Claude Desktop', value: 'claude' },
-            { name: 'אתחל מסד נתונים', value: 'db' },
-            { name: 'בדוק את כל הרכיבים', value: 'test' },
+            { name: visualHebrew('ייבא פרטי גישה לבנקים'), value: 'creds' },
+            { name: visualHebrew('הגדר Claude Desktop'), value: 'claude' },
+            { name: visualHebrew('אתחל מסד נתונים'), value: 'db' },
+            { name: visualHebrew('בדוק את כל הרכיבים'), value: 'test' },
           ],
         },
       ]);
 
       if (sub === 'creds') {
         const { file } = await inquirer.prompt([
-          { type: 'input', name: 'file', message: 'נתיב לקובץ JSON:' },
+          { type: 'input', name: 'file', message: visualHebrew('נתיב לקובץ JSON:') },
         ]);
         await setupCreds(file);
       } else if (sub === 'claude') {
@@ -313,11 +314,11 @@ if (process.argv.length === 2) {
         {
           type: 'list',
           name: 'sub',
-          message: 'אבחון:',
+          message: visualHebrew('אבחון:'),
           choices: [
-            { name: 'בדוק התראות', value: 'notify' },
-            { name: 'בדוק מסד נתונים', value: 'db' },
-            { name: 'בדוק שרת MCP', value: 'mcp' },
+            { name: visualHebrew('בדוק התראות'), value: 'notify' },
+            { name: visualHebrew('בדוק מסד נתונים'), value: 'db' },
+            { name: visualHebrew('בדוק שרת MCP'), value: 'mcp' },
           ],
         },
       ]);
