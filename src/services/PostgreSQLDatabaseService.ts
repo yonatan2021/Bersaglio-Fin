@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { ScraperCredentialRow, TransactionRow } from '../types.js';
+import { BudgetRow, ScraperCredentialRow, TransactionRow } from '../types.js';
 import { validateSelectQuery } from '../utils/sqlValidation.js';
 import { DatabaseService } from '../interfaces/DatabaseService.js';
 
@@ -384,6 +384,50 @@ export class PostgreSQLDatabaseService implements DatabaseService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error executing query',
+      };
+    }
+  }
+
+  public async getBudgets(): Promise<{ success: boolean; data?: BudgetRow[]; error?: string }> {
+    try {
+      this.ensureReady();
+      const client = await this.pool!.connect();
+      try {
+        const result = await client.query('SELECT * FROM budgets ORDER BY category');
+        return { success: true, data: result.rows as BudgetRow[] };
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get budgets',
+      };
+    }
+  }
+
+  public async upsertBudget(
+    category: string,
+    monthlyLimit: number
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      this.ensureReady();
+      const client = await this.pool!.connect();
+      try {
+        await client.query(
+          `INSERT INTO budgets (category, monthly_limit)
+           VALUES ($1, $2)
+           ON CONFLICT(category) DO UPDATE SET monthly_limit = EXCLUDED.monthly_limit, updated_at = NOW()`,
+          [category, monthlyLimit]
+        );
+        return { success: true };
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to upsert budget',
       };
     }
   }

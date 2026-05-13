@@ -1,4 +1,4 @@
-import { ScraperCredentialRow, TransactionRow } from '../types.js';
+import { BudgetRow, ScraperCredentialRow, TransactionRow } from '../types.js';
 
 export interface DatabaseService {
   databaseExists(): Promise<boolean>;
@@ -40,4 +40,11 @@ export interface DatabaseService {
   // Utility methods
   listTables(): Promise<{ success: boolean; tables?: string[]; error?: string }>;
   executeSafeSelectQuery(query: string): Promise<{ success: boolean; data?: any; error?: string }>;
+
+  // Budget methods
+  getBudgets(): Promise<{ success: boolean; data?: BudgetRow[]; error?: string }>;
+  upsertBudget(
+    category: string,
+    monthlyLimit: number
+  ): Promise<{ success: boolean; error?: string }>;
 }

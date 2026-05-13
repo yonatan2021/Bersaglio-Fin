@@ -6,6 +6,7 @@ import { authMiddleware } from './middleware/auth.js';
 import { createSessionMiddleware } from './middleware/session.js';
 import { DatabaseFactory } from '../services/DatabaseFactory.js';
 import { accountsCommand } from './commands/accounts.js';
+import { budgetCommand } from './commands/budget.js';
 import { reportCommand } from './commands/report.js';
 import { syncCommand } from './commands/sync.js';
 
@@ -32,6 +33,7 @@ bot.command('start', async ctx => {
 
 // Register commands
 bot.command('accounts', accountsCommand);
+bot.command('budget', budgetCommand);
 bot.command('report', reportCommand);
 bot.command('sync', syncCommand);
 

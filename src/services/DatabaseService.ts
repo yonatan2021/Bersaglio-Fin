@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3-multiple-ciphers';
-import { ScraperCredentialRow, TransactionRow } from '../types.js';
+import { BudgetRow, ScraperCredentialRow, TransactionRow } from '../types.js';
 import { existsSync, chmodSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
@@ -203,6 +203,13 @@ export class SQLiteDatabaseService implements DatabaseServiceInterface {
           PRIMARY KEY (scraper_credential_id, identifier),
           FOREIGN KEY (scraper_credential_id) REFERENCES scraper_credentials(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS budgets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category TEXT NOT NULL UNIQUE,
+          monthly_limit REAL NOT NULL,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
       `);
     } catch (error) {
       console.error('Failed to initialize database:', error);
@@ -340,6 +347,43 @@ export class SQLiteDatabaseService implements DatabaseServiceInterface {
     } catch (error) {
       console.error('Failed to get transactions:', error);
       throw error; // Let the caller handle the error
+    }
+  }
+
+  public async getBudgets(): Promise<{ success: boolean; data?: BudgetRow[]; error?: string }> {
+    try {
+      this.ensureReady();
+      const db = this.assertInitialized();
+      const rows = db.prepare('SELECT * FROM budgets ORDER BY category').all() as BudgetRow[];
+      return { success: true, data: rows };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get budgets',
+      };
+    }
+  }
+
+  public async upsertBudget(
+    category: string,
+    monthlyLimit: number
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      this.ensureReady();
+      const db = this.assertInitialized();
+      db.prepare(
+        `
+        INSERT INTO budgets (category, monthly_limit)
+        VALUES (?, ?)
+        ON CONFLICT(category) DO UPDATE SET monthly_limit = excluded.monthly_limit, updated_at = datetime('now')
+      `
+      ).run(category, monthlyLimit);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to upsert budget',
+      };
     }
   }
 

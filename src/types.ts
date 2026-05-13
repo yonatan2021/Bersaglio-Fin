@@ -163,3 +163,10 @@ export interface TransactionRow {
   memo: string | null;
   category: string | null;
 }
+
+export interface BudgetRow {
+  id: number;
+  category: string;
+  monthly_limit: number;
+  updated_at: string;
+}
