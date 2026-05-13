@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { visualHebrew } from '../../utils/rtl.js';
 import { encryptionKeyService } from '../../services/EncryptionKeyService.js';
 import { DatabaseFactory } from '../../services/DatabaseFactory.js';
 import { PostgreSQLDatabaseService } from '../../services/PostgreSQLDatabaseService.js';
@@ -16,7 +17,7 @@ export async function runSync(): Promise<void> {
         {
           type: 'password',
           name: 'key',
-          message: 'הכנס מפתח הצפנה:',
+          message: visualHebrew('הכנס מפתח הצפנה:'),
         },
       ]);
       encryptionKeyService.setKey(key);
@@ -25,12 +26,12 @@ export async function runSync(): Promise<void> {
     await dbService.initialize();
 
     const { scraperService } = await import('../../services/ScraperService.js');
-    console.log(chalk.blue('🔄 מסנכרן את כל החשבונות...'));
+    console.log(chalk.blue(visualHebrew('🔄 מסנכרן את כל החשבונות...')));
 
     const result = await scraperService.fetchAllTransactions();
 
     if (!result.success) {
-      console.error(chalk.red('❌ שגיאה בסינכרון'));
+      console.error(chalk.red(visualHebrew('❌ שגיאה בסינכרון')));
       result.results.forEach((r: { success: boolean; friendlyName: string; error?: string }) => {
         if (!r.success) console.error(chalk.red(`  ❌ ${r.friendlyName}: ${r.error}`));
       });
@@ -38,7 +39,11 @@ export async function runSync(): Promise<void> {
     }
 
     const successCount = result.results.filter((r: { success: boolean }) => r.success).length;
-    console.log(chalk.green(`✅ סינכרון הושלם: ${successCount}/${result.results.length} חשבונות`));
+    console.log(
+      chalk.green(
+        visualHebrew(`✅ סינכרון הושלם: ${successCount}/${result.results.length} חשבונות`)
+      )
+    );
 
     result.results.forEach(
       (r: {
@@ -49,12 +54,12 @@ export async function runSync(): Promise<void> {
       }) => {
         const count = r.accounts?.reduce((s, acc) => s + (acc.txns?.length || 0), 0) || 0;
         const icon = r.success ? '✅' : '❌';
-        const detail = r.success ? `${count} עסקאות` : r.error;
+        const detail = r.success ? visualHebrew(`${count} עסקאות`) : r.error;
         console.log(`  ${icon} ${r.friendlyName}: ${detail}`);
       }
     );
   } catch (err) {
-    console.error(chalk.red(`❌ שגיאה בסינכרון: ${(err as Error).message}`));
+    console.error(chalk.red(visualHebrew(`❌ שגיאה בסינכרון: ${(err as Error).message}`)));
     process.exit(1);
   }
 }

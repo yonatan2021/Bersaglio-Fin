@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { visualHebrew } from '../../utils/rtl.js';
 import { sendNotification } from '../../utils/notify.js';
 import { DatabaseFactory } from '../../services/DatabaseFactory.js';
 import { encryptionKeyService } from '../../services/EncryptionKeyService.js';
@@ -14,16 +15,16 @@ interface NotifyOptions {
 
 export async function diagNotify(options: NotifyOptions): Promise<void> {
   try {
-    console.log(chalk.blue('📤 שולח התראת בדיקה...'));
+    console.log(chalk.blue(visualHebrew('📤 שולח התראת בדיקה...')));
     await sendNotification({
       title: options.title,
       message: options.message,
       sound: options.sound,
       wait: false,
     });
-    console.log(chalk.green('✅ התראה נשלחה בהצלחה'));
+    console.log(chalk.green(visualHebrew('✅ התראה נשלחה בהצלחה')));
   } catch (err) {
-    console.error(chalk.red(`❌ נכשל בשליחת התראה: ${(err as Error).message}`));
+    console.error(chalk.red(visualHebrew(`❌ נכשל בשליחת התראה: ${(err as Error).message}`)));
     process.exit(1);
   }
 }
@@ -35,7 +36,7 @@ export async function diagDb(): Promise<void> {
 
     if (!isPostgres && encryptionKeyService.getKey() === null) {
       const { key } = await inquirer.prompt([
-        { type: 'password', name: 'key', message: 'הכנס מפתח הצפנה:' },
+        { type: 'password', name: 'key', message: visualHebrew('הכנס מפתח הצפנה:') },
       ]);
       encryptionKeyService.setKey(key);
     }
@@ -45,13 +46,19 @@ export async function diagDb(): Promise<void> {
     const result = await dbService.listTables();
 
     if (result.success) {
-      console.log(chalk.green(`✅ חיבור למסד נתונים תקין — ${result.tables?.length ?? 0} טבלאות`));
+      console.log(
+        chalk.green(
+          visualHebrew(`✅ חיבור למסד נתונים תקין — ${result.tables?.length ?? 0} טבלאות`)
+        )
+      );
     } else {
-      console.error(chalk.red(`❌ בעיה במסד הנתונים: ${result.error}`));
+      console.error(chalk.red(visualHebrew(`❌ בעיה במסד הנתונים: ${result.error}`)));
       process.exit(1);
     }
   } catch (err) {
-    console.error(chalk.red(`❌ שגיאה בבדיקת מסד הנתונים: ${(err as Error).message}`));
+    console.error(
+      chalk.red(visualHebrew(`❌ שגיאה בבדיקת מסד הנתונים: ${(err as Error).message}`))
+    );
     process.exit(1);
   }
 }
@@ -61,8 +68,8 @@ export async function diagDb(): Promise<void> {
 export async function diagMcp(): Promise<void> {
   const pid = readPid('mcp');
   if (!pid || !isAlive(pid)) {
-    console.log(chalk.red('❌ שרת MCP לא פועל'));
+    console.log(chalk.red(visualHebrew('❌ שרת MCP לא פועל')));
     return;
   }
-  console.log(chalk.green(`✅ שרת MCP פועל (PID ${pid})`));
+  console.log(chalk.green(visualHebrew(`✅ שרת MCP פועל (PID ${pid})`)));
 }
