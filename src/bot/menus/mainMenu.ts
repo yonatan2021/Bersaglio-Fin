@@ -6,7 +6,7 @@ import { syncCommand } from '../commands/sync.js';
 import { accountsCommand } from '../commands/accounts.js';
 
 export const mainMenu = new Menu<BotContext>('main-menu')
-  .text('➕ הוסף הוצאה', ctx => ctx.conversation.enter('addExpense'))
+  .text('➕ הוסף הוצאה', ctx => ctx.conversation.enter('addExpenseConversation'))
   .row()
   .text('📊 דוח חודשי', async ctx => {
     await reportCommand(ctx);
