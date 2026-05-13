@@ -19,7 +19,7 @@ export async function reportCommand(ctx: BotContext): Promise<void> {
         SUM(chargedAmount) as total,
         COUNT(*) as count
       FROM transactions
-      WHERE date >= '${startDate}' AND date < '${endDate}'
+      WHERE date >= '${startDate}' AND date < '${endDate}' AND chargedAmount > 0
       GROUP BY COALESCE(category, 'ללא קטגוריה')
       ORDER BY total DESC
     `);

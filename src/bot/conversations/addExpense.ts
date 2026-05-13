@@ -41,9 +41,21 @@ export async function addExpenseConversation(
 
   let category: (typeof CATEGORIES)[0] | undefined;
   while (!category) {
-    const categoryCtx = await conversation.waitFor('callback_query:data');
+    const categoryCtx = await conversation.wait();
+
+    // Text-based cancel (e.g. user types /cancel instead of tapping keyboard)
+    if (categoryCtx.message?.text?.startsWith('/')) {
+      await ctx.reply('הפעולה בוטלה. ניתן לשלוח /add כדי להתחיל מחדש.');
+      return;
+    }
+
+    // Must be a callback query from the keyboard
+    if (!categoryCtx.callbackQuery) {
+      continue; // silently skip non-command, non-callback updates
+    }
+
     await categoryCtx.answerCallbackQuery();
-    const foundCategory = CATEGORIES.find(c => c.id === categoryCtx.callbackQuery.data);
+    const foundCategory = CATEGORIES.find(c => c.id === categoryCtx.callbackQuery!.data);
     if (foundCategory) {
       category = foundCategory;
     } else {
