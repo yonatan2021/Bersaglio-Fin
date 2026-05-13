@@ -18,6 +18,11 @@ export async function addExpenseConversation(
   while (amount === null) {
     const amountCtx = await conversation.wait();
     const text = amountCtx.message?.text;
+    // Allow cancellation during any step
+    if (text && text.startsWith('/') && text !== '/skip') {
+      await amountCtx.reply('הפעולה בוטלה. ניתן לשלוח /add כדי להתחיל מחדש.');
+      return;
+    }
     const parsed = text ? parseFloat(text.replace(',', '.')) : NaN;
     if (!isNaN(parsed) && parsed > 0) {
       amount = parsed;
@@ -34,14 +39,16 @@ export async function addExpenseConversation(
   });
   await ctx.reply('באיזה קטגוריה?', { reply_markup: keyboard });
 
-  const categoryCtx = await conversation.waitFor('callback_query:data');
-  const categoryId = categoryCtx.callbackQuery.data;
-  const category = CATEGORIES.find(c => c.id === categoryId);
-  await categoryCtx.answerCallbackQuery();
-
-  if (!category) {
-    await ctx.reply('קטגוריה לא תקינה. התחל מחדש עם /add');
-    return;
+  let category: (typeof CATEGORIES)[0] | undefined;
+  while (!category) {
+    const categoryCtx = await conversation.waitFor('callback_query:data');
+    await categoryCtx.answerCallbackQuery();
+    const foundCategory = CATEGORIES.find(c => c.id === categoryCtx.callbackQuery.data);
+    if (foundCategory) {
+      category = foundCategory;
+    } else {
+      await ctx.reply('אנא בחר קטגוריה מהרשימה');
+    }
   }
 
   // Step 3: Ask for description (optional)
@@ -49,6 +56,13 @@ export async function addExpenseConversation(
 
   const descCtx = await conversation.wait();
   const descText = descCtx.message?.text;
+
+  // Treat any command (other than /skip) as cancellation intent
+  if (descText && descText.startsWith('/') && descText !== '/skip') {
+    await ctx.reply('הפעולה בוטלה. ניתן לשלוח /add כדי להתחיל מחדש.');
+    return;
+  }
+
   const description = descText && descText !== '/skip' ? descText : category.hebrewName;
 
   // Save to DB — MUST use conversation.external() to prevent replay double-save

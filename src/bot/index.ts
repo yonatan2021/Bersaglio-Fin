@@ -25,9 +25,15 @@ const bot = new Bot<BotContext>(token);
 
 // Middleware (order matters)
 bot.use(createSessionMiddleware());
+bot.use(authMiddleware);
 bot.use(conversations());
 bot.use(createConversation(addExpenseConversation));
-bot.use(authMiddleware);
+
+// Global cancel command — works even inside active conversations
+bot.command('cancel', async ctx => {
+  await ctx.conversation.exitAll();
+  await ctx.reply('הפעולה בוטלה.');
+});
 
 // /start command — placeholder until Phase 5 adds the full menu
 bot.command('start', async ctx => {
