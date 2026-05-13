@@ -274,3 +274,5 @@ public
 .netlify
 CLAUDE.md
 .claude/**
+doc/**
+
