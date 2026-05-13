@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { UnlockModal } from "@/components/UnlockModal";
+import { Nav } from "@/components/Nav";
 
 export const metadata: Metadata = {
   title: "Bersaglio",
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className="dark">
       <body className="bg-background text-foreground antialiased">
+        <Nav />
         {children}
         <UnlockModal />
       </body>
