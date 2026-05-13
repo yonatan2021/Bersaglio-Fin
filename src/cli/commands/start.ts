@@ -4,6 +4,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
+import { visualHebrew } from '../../utils/rtl.js';
 
 export const PID_DIR = join(homedir(), '.fin', 'pids');
 
@@ -63,7 +64,7 @@ export async function startService(name: ServiceName): Promise<void> {
 
   const existingPid = readPid(name);
   if (existingPid && isAlive(existingPid)) {
-    console.log(chalk.yellow(`⚠️  ${svc.label} כבר רץ (PID ${existingPid})`));
+    console.log(chalk.yellow(visualHebrew(`⚠️  ${svc.label} כבר רץ (PID ${existingPid})`)));
     return;
   }
 
@@ -77,18 +78,18 @@ export async function startService(name: ServiceName): Promise<void> {
   });
 
   if (!child.pid) {
-    console.error(chalk.red(`❌ נכשל בהפעלת ${svc.label}`));
+    console.error(chalk.red(visualHebrew(`❌ נכשל בהפעלת ${svc.label}`)));
     process.exit(1);
   }
 
   writeFileSync(pidFile(name), String(child.pid));
   child.unref();
 
-  console.log(chalk.green(`✅ ${svc.label} הופעל (PID ${child.pid})`));
+  console.log(chalk.green(visualHebrew(`✅ ${svc.label} הופעל (PID ${child.pid})`)));
 }
 
 export async function startAll(): Promise<void> {
-  console.log(chalk.blue('🚀 מפעיל את כל השירותים...'));
+  console.log(chalk.blue(visualHebrew('🚀 מפעיל את כל השירותים...')));
   // spawn returns immediately — no need to await sequentially
   await Promise.all((Object.keys(SERVICES) as ServiceName[]).map(name => startService(name)));
 }
