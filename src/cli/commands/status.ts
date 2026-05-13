@@ -1,27 +1,29 @@
 import chalk from 'chalk';
 import { statSync, existsSync } from 'fs';
 import { SERVICES, ServiceName, readPid, isAlive, pidFile } from './start.js';
+import { visualHebrew } from '../../utils/rtl.js';
 
 export async function showStatus(): Promise<void> {
-  console.log(chalk.bold('\nסטטוס שירותים:\n'));
+  console.log(chalk.bold(visualHebrew('\nסטטוס שירותים:\n')));
 
   for (const name of Object.keys(SERVICES) as ServiceName[]) {
     const svc = SERVICES[name];
     const pid = readPid(name);
 
-    // Note: padEnd() counts bytes, not display chars — Hebrew glyphs are multi-byte.
-    // Use a fixed label+newline pattern instead of column alignment.
     if (!pid) {
-      console.log(`  ${chalk.red('●')} ${svc.label}  ${chalk.gray('לא פועל')}`);
+      console.log(
+        `  ${chalk.red('●')} ${visualHebrew(svc.label)}  ${chalk.gray(visualHebrew('לא פועל'))}`
+      );
       continue;
     }
 
     if (!isAlive(pid)) {
-      console.log(`  ${chalk.red('●')} ${svc.label}  ${chalk.red('קרס')} (PID ${pid})`);
+      console.log(
+        `  ${chalk.red('●')} ${visualHebrew(svc.label)}  ${chalk.red(visualHebrew('קרס'))} (PID ${pid})`
+      );
       continue;
     }
 
-    // Uptime is approximated from PID file mtime — accurate unless the file was touched externally
     let uptime = '';
     const file = pidFile(name);
     if (existsSync(file)) {
@@ -33,7 +35,7 @@ export async function showStatus(): Promise<void> {
     }
 
     console.log(
-      `  ${chalk.green('●')} ${svc.label}  ${chalk.green('פועל')} (PID ${pid})${uptime ? `  זמן פעולה: ${uptime}` : ''}`
+      `  ${chalk.green('●')} ${visualHebrew(svc.label)}  ${chalk.green(visualHebrew('פועל'))} (PID ${pid})${uptime ? `  ${visualHebrew(`זמן פעולה: ${uptime}`)}` : ''}`
     );
   }
 
