@@ -1,5 +1,5 @@
 {
-  "name": "asher",
+  "name": "bersaglio",
   "version": "1.0.0",
   "description": "Personal MCP server for financial data aggregation from Israeli banks",
   "main": "dist/index.js",
