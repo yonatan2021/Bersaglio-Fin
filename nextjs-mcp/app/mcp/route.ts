@@ -1,7 +1,8 @@
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
-import { getDatabaseService } from '../../src/lib/database';
+import { getDbInstance } from '@main-src/services/DatabaseService.js';
+import { encryptionKeyService } from '@main-src/services/EncryptionKeyService.js';
 
 interface TextContent {
   type: 'text';
@@ -24,10 +25,28 @@ function textResponse(text: string): { content: TextContent[] } {
   };
 }
 
+async function getMcpDb() {
+  const envKey = process.env.ENCRYPTION_KEY;
+  if (envKey && !encryptionKeyService.getKey()) {
+    console.log('[MCP] Using ENCRYPTION_KEY from env (singleton key was empty after restart/hot-reload)');
+    encryptionKeyService.setKey(envKey);
+  }
+  if (!encryptionKeyService.getKey()) {
+    throw new Error(
+      'No encryption key available. Set ENCRYPTION_KEY env var in .env.local, or unlock the dashboard first.'
+    );
+  }
+  const db = getDbInstance();
+  await db.initialize();
+  return db;
+}
+
+const SAFE_TABLE_NAME = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
 const tools: Record<string, { handler: ToolHandler; schema?: ToolSchema }> = {
   listTables: {
     handler: async () => {
-      const db = getDatabaseService();
+      const db = await getMcpDb();
       const result = await db.listTables();
       if (!result.success) {
         throw new Error(result.error || 'Failed to list tables');
@@ -42,15 +61,12 @@ const tools: Record<string, { handler: ToolHandler; schema?: ToolSchema }> = {
   getTableSchema: {
     handler: async (params: Record<string, unknown>) => {
       const { table } = params as { table: string };
-      if (!table) {
-        throw new Error('Table name is required');
+      if (!table || !SAFE_TABLE_NAME.test(table)) {
+        throw new Error('Invalid table name');
       }
-      const db = getDatabaseService();
-      const result = await db.executeSafeSelectQuery(`SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = $1`, [table]);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to get table schema');
-      }
-      return { success: true, data: { schema: result.data } };
+      const db = await getMcpDb();
+      const columns = await db.query(`PRAGMA table_info(${table})`);
+      return { success: true, data: { schema: columns } };
     },
     schema: {
       description: 'Get the schema for a specific table',
@@ -67,7 +83,7 @@ const tools: Record<string, { handler: ToolHandler; schema?: ToolSchema }> = {
         throw new Error('Query is required');
       }
 
-      const db = getDatabaseService();
+      const db = await getMcpDb();
       const result = await db.executeSafeSelectQuery(query);
       if (!result.success) {
         throw new Error(result.error || 'Query execution failed');
@@ -85,25 +101,26 @@ const tools: Record<string, { handler: ToolHandler; schema?: ToolSchema }> = {
   describeTable: {
     handler: async (params: Record<string, unknown>) => {
       const { table } = params as { table: string };
-      if (!table) {
-        throw new Error('Table name is required');
+      if (!table || !SAFE_TABLE_NAME.test(table)) {
+        throw new Error('Invalid table name');
       }
-      const db = getDatabaseService();
-      const columnsResult = await db.executeSafeSelectQuery(`SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = $1`, [table]);
-      const indexesResult = await db.executeSafeSelectQuery(`SELECT indexname, indexdef FROM pg_indexes WHERE tablename = $1`, [table]);
-
-      if (!columnsResult.success) {
-        throw new Error(columnsResult.error || 'Failed to get table columns');
-      }
-      if (!indexesResult.success) {
-        throw new Error(indexesResult.error || 'Failed to get table indexes');
+      const db = await getMcpDb();
+      const columns = await db.query(`PRAGMA table_info(${table})`);
+      const indexList = await db.query<{ name: string; unique: number; origin: string; partial: number }>(
+        `PRAGMA index_list(${table})`
+      );
+      const indexes = [] as Array<{ name: string; unique: number; origin: string; columns: unknown[] }>;
+      for (const idx of indexList) {
+        if (!SAFE_TABLE_NAME.test(idx.name)) continue;
+        const info = await db.query(`PRAGMA index_info(${idx.name})`);
+        indexes.push({ name: idx.name, unique: idx.unique, origin: idx.origin, columns: info });
       }
 
       return {
         success: true,
         data: {
-          columns: columnsResult.data,
-          indexes: indexesResult.data,
+          columns,
+          indexes,
         },
       };
     },
