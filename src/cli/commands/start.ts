@@ -2,24 +2,28 @@ import { spawn } from 'child_process';
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 
 export const PID_DIR = join(homedir(), '.bersaglio', 'pids');
 
 // Derive project root from this file's location (src/cli/commands/start.ts → ../../..)
-// Using import.meta.url ensures the correct root regardless of which directory bersaglio is called from
-const PROJECT_ROOT = new URL('../../..', import.meta.url).pathname;
+// fileURLToPath decodes percent-encoded chars (important for paths with non-ASCII like Hebrew dirs)
+const PROJECT_ROOT = fileURLToPath(new URL('../../..', import.meta.url));
+
+// Use local tsx from node_modules/.bin rather than requiring a global install
+const TSX = join(PROJECT_ROOT, 'node_modules/.bin/tsx');
 
 export const SERVICES = {
   bot: {
     label: 'בוט טלגרם',
-    cmd: 'tsx',
+    cmd: TSX,
     args: [join(PROJECT_ROOT, 'src/bot/index.ts')],
     cwd: PROJECT_ROOT,
   },
   mcp: {
     label: 'שרת MCP',
-    cmd: 'tsx',
+    cmd: TSX,
     args: [join(PROJECT_ROOT, 'src/mcp/Server.ts')],
     cwd: PROJECT_ROOT,
   },

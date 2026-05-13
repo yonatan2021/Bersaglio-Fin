@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
+import { fileURLToPath } from 'url';
 import { ingestCredentials } from '../ingestCredentials.js';
 import { configureClaudeIntegration } from '../../utils/claudeConfig.js';
 import { DatabaseFactory } from '../../services/DatabaseFactory.js';
@@ -7,8 +8,8 @@ import { encryptionKeyService } from '../../services/EncryptionKeyService.js';
 import { PostgreSQLDatabaseService } from '../../services/PostgreSQLDatabaseService.js';
 import { readPid, isAlive } from './start.js'; // static import — no circular dependency
 
-// Same PROJECT_ROOT as start.ts (src/cli/commands/setup.ts → ../../..)
-const PROJECT_ROOT = new URL('../../..', import.meta.url).pathname;
+// fileURLToPath decodes percent-encoded chars (important for paths with non-ASCII like Hebrew dirs)
+const PROJECT_ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 
 export async function setupCreds(filePath: string, key?: string): Promise<void> {
   try {
