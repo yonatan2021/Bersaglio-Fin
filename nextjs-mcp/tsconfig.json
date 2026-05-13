@@ -20,9 +20,16 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@/mastra": ["./src/mastra"]
+      "@/mastra": ["./src/mastra"],
+      "@main-src/*": ["../src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../src/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
