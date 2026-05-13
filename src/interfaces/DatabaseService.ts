@@ -56,4 +56,20 @@ export interface DatabaseService {
     startDate?: string,
     endDate?: string
   ): Promise<{ success: boolean; data?: ManualTransactionRow[]; error?: string }>;
+
+  // Sync state methods (synchronous — backed by a single-row table)
+  readSyncState(): {
+    status: string;
+    started_at: string | null;
+    completed_at: string | null;
+    results: string | null;
+    error: string | null;
+  };
+  startSyncAtomic(startedAt: string): boolean;
+  writeSyncState(fields: {
+    status: string;
+    completed_at?: string | null;
+    results?: string | null;
+    error?: string | null;
+  }): void;
 }

@@ -506,6 +506,29 @@ export class PostgreSQLDatabaseService implements DatabaseService {
     }
   }
 
+  public readSyncState(): {
+    status: string;
+    started_at: string | null;
+    completed_at: string | null;
+    results: string | null;
+    error: string | null;
+  } {
+    throw new Error('Not implemented for PostgreSQL');
+  }
+
+  public startSyncAtomic(_startedAt: string): boolean {
+    throw new Error('Not implemented for PostgreSQL');
+  }
+
+  public writeSyncState(_fields: {
+    status: string;
+    completed_at?: string | null;
+    results?: string | null;
+    error?: string | null;
+  }): void {
+    throw new Error('Not implemented for PostgreSQL');
+  }
+
   public async execute(
     query: string,
     params: any[] = []

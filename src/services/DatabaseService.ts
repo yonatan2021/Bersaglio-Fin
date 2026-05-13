@@ -220,6 +220,16 @@ export class SQLiteDatabaseService implements DatabaseServiceInterface {
           category TEXT NOT NULL,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS sync_state (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          status TEXT NOT NULL DEFAULT 'idle',
+          started_at TEXT,
+          completed_at TEXT,
+          results TEXT,
+          error TEXT
+        );
+        INSERT OR IGNORE INTO sync_state (id, status) VALUES (1, 'idle');
       `);
     } catch (error) {
       console.error('Failed to initialize database:', error);
@@ -446,6 +456,60 @@ export class SQLiteDatabaseService implements DatabaseServiceInterface {
         error: error instanceof Error ? error.message : 'Failed to get transactions',
       };
     }
+  }
+
+  public readSyncState(): {
+    status: string;
+    started_at: string | null;
+    completed_at: string | null;
+    results: string | null;
+    error: string | null;
+  } {
+    this.ensureReady();
+    const db = this.assertInitialized();
+    return db
+      .prepare(
+        'SELECT status, started_at, completed_at, results, error FROM sync_state WHERE id = 1'
+      )
+      .get() as any;
+  }
+
+  // Atomic check-and-set: only updates if current status != 'running'.
+  // Returns true if sync was successfully started, false if already running.
+  public startSyncAtomic(startedAt: string): boolean {
+    this.ensureReady();
+    const db = this.assertInitialized();
+    const result = db
+      .prepare(
+        `UPDATE sync_state SET status = 'running', started_at = ?,
+         completed_at = NULL, results = NULL, error = NULL
+         WHERE id = 1 AND status != 'running'`
+      )
+      .run(startedAt);
+    return result.changes > 0;
+  }
+
+  public writeSyncState(fields: {
+    status: string;
+    completed_at?: string | null;
+    results?: string | null;
+    error?: string | null;
+  }): void {
+    this.ensureReady();
+    const db = this.assertInitialized();
+    db.prepare(
+      `UPDATE sync_state SET
+        status = @status,
+        completed_at = @completed_at,
+        results = @results,
+        error = @error
+      WHERE id = 1`
+    ).run({
+      status: fields.status,
+      completed_at: fields.completed_at ?? null,
+      results: fields.results ?? null,
+      error: fields.error ?? null,
+    });
   }
 
   public close(): Promise<void> {
