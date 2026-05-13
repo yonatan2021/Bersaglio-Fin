@@ -74,7 +74,7 @@ Bersaglio-Fin עוקב אחרי ארכיטקטורת "Local-first" עם שלוש
    npm run build
    ```
 
-4. **אופציונלי**: התקינו את פקודת ה-CLI המערכתית `bersaglio`:
+4. **אופציונלי**: התקינו את פקודת ה-CLI המערכתית `fin`:
    ```bash
    npm install -g .
    ```
@@ -99,7 +99,7 @@ Bersaglio-Fin עוקב אחרי ארכיטקטורת "Local-first" עם שלוש
 
 2. הזינו את פרטי הגישה שלכם:
    ```bash
-   bersaglio ingest-creds -f credentials.json
+   fin setup creds -f credentials.json
    ```
    - תתבקשו להזין מפתח הצפנה (לפחות 6 תווים).
    - מפתח זה **לעולם לא נשמר על הדיסק** ויש לספק אותו בכל פעם שהאפליקציה עולה.

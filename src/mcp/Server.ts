@@ -1,5 +1,7 @@
+import http from 'http';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import israeliBankScrapers from 'israeli-bank-scrapers';
 import { z } from 'zod';
@@ -278,8 +280,22 @@ class Server {
 
   public async start() {
     try {
-      await this.server.connect(new StdioServerTransport());
-      console.error('MCP Server started successfully');
+      const httpPort = process.env.MCP_HTTP_PORT ? Number(process.env.MCP_HTTP_PORT) : null;
+
+      if (httpPort) {
+        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+        await this.server.connect(transport);
+
+        const httpServer = http.createServer(async (req, res) => {
+          await transport.handleRequest(req, res);
+        });
+
+        await new Promise<void>(resolve => httpServer.listen(httpPort, resolve));
+        console.error(`MCP HTTP server running on port ${httpPort}`);
+      } else {
+        await this.server.connect(new StdioServerTransport());
+        console.error('MCP Server started successfully');
+      }
     } catch (error) {
       console.error('Failed to start MCP Server:', error);
       throw error;

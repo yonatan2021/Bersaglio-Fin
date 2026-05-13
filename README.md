@@ -74,7 +74,7 @@ Bersaglio-Fin follows a local-first architecture with three consumer interfaces 
    npm run build
    ```
 
-4. **Optional**: Install the system-wide `bersaglio` CLI command:
+4. **Optional**: Install the system-wide `fin` CLI command:
    ```bash
    npm install -g .
    ```
@@ -99,7 +99,7 @@ The database file is stored in the following location, depending on your OS:
 
 2. Ingest your credentials:
    ```bash
-   bersaglio ingest-creds -f credentials.json
+   fin setup creds -f credentials.json
    ```
    - You will be prompted to enter an encryption key (minimum 6 characters).
    - This key is **never stored on disk** and must be provided each time the app starts.

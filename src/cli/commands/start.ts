@@ -5,7 +5,7 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 
-export const PID_DIR = join(homedir(), '.bersaglio', 'pids');
+export const PID_DIR = join(homedir(), '.fin', 'pids');
 
 // Derive project root from this file's location (src/cli/commands/start.ts → ../../..)
 // fileURLToPath decodes percent-encoded chars (important for paths with non-ASCII like Hebrew dirs)
@@ -69,10 +69,11 @@ export async function startService(name: ServiceName): Promise<void> {
 
   mkdirSync(PID_DIR, { recursive: true });
 
-  const child = spawn(svc.cmd, svc.args, {
+  const child = spawn(svc.cmd, [...svc.args], {
     cwd: svc.cwd,
     detached: true,
     stdio: 'ignore', // ignore so the process survives terminal close (inherit = SIGHUP on terminal exit)
+    env: name === 'mcp' ? { ...process.env, MCP_HTTP_PORT: '3001' } : undefined,
   });
 
   if (!child.pid) {

@@ -22,7 +22,7 @@ import { ingestCredentials } from './ingestCredentials.js';
 import { configureClaudeIntegration } from '../utils/claudeConfig.js';
 import { sendNotification } from '../utils/notify.js';
 
-program.name('bersaglio').description('ממשק ניהול למערכת בֶּרְסַלְיוֹ').version('1.0.0');
+program.name('fin').description('ממשק ניהול למערכת בֶּרְסַלְיוֹ').version('1.0.0');
 
 // ── start ──────────────────────────────────────────────────────────────────
 
@@ -168,7 +168,7 @@ diagCmd
 // ── hidden backward-compat aliases ─────────────────────────────────────────
 
 // Note: old ingest-creds ran scraping automatically after credential save.
-// That step is intentionally removed — use 'bersaglio sync' separately.
+// That step is intentionally removed — use 'fin sync' separately.
 program
   .command('ingest-creds', { hidden: true })
   .requiredOption('-f, --file <path>', 'Path to the credentials JSON file')

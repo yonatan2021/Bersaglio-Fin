@@ -7,7 +7,7 @@ export interface SessionData {
 }
 
 const SESSION_OPTIONS = {
-  cookieName: 'bersaglio-session',
+  cookieName: 'fin-session',
   password: process.env.SESSION_SECRET ?? 'dev-secret-must-be-32-chars-minimum!!',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
