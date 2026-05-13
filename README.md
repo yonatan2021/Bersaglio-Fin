@@ -1,8 +1,13 @@
-# Asher - Personal Financial Data MCP Server
+# Bersaglio-Fin - Personal Financial Data MCP Server
 
 > **Get closer to your own data, on steroids!**
 
-A secure, local-first financial data aggregator for Israeli banks and credit card companies, built with TypeScript and powered by [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers). Asher helps you aggregate and analyze your financial transactions across multiple sources while keeping your data private and secure.
+## Attribution
+Bersaglio-Fin is a fork of asher-mcp by @shlomiuziel.
+This fork extends and maintains the original project with additional improvements.
+All core architecture and design originated from asher-mcp.
+
+A secure, local-first financial data aggregator for Israeli banks and credit card companies, built with TypeScript and powered by [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers). Bersaglio-Fin helps you aggregate and analyze your financial transactions across multiple sources while keeping your data private and secure.
 Information is scraped and stored in a local, encrypted SQLite database.
 
 ![demo](./.github/demo.gif)
@@ -78,7 +83,7 @@ The database file is stored in the following location, depending on your OS:
 
 ### MCP Tools
 
-Asher provides several tools for MCP hosts:
+Bersaglio-Fin provides several tools for MCP hosts:
 
 - `fetchTransactions`: Fetch recent transactions and store them in the database.
 - `describeTable`: Get detailed information about a table (columns, indexes).

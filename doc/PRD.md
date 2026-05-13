@@ -1,12 +1,17 @@
-# **Asher: MCP Financial Data Aggregator \- Product Requirements Document**
+# **Bersaglio-Fin: MCP Financial Data Aggregator - Product Requirements Document**
 
-Version: 1.0  
-Date: May 23, 2025  
-Project Name: Asher
+Version: 1.1  
+Date: May 2026  
+Project Name: Bersaglio-Fin
+
+## Attribution
+Bersaglio-Fin is a fork of asher-mcp by @shlomiuziel.
+This fork extends and maintains the original project with additional improvements.
+All core architecture and design originated from asher-mcp.
 
 ## **1\. Introduction**
 
-Asher is a personal Model Context Protocol (MCP) server designed to securely scrape, store, and manage financial data from various Israeli bank and credit card accounts. It leverages the israeli-bank-scrapers library, stores data in an encrypted local SQLite database, and exposes MCP tools for data interaction and scraping management. This document outlines the detailed specifications for its development.
+Bersaglio-Fin is a personal Model Context Protocol (MCP) server designed to securely scrape, store, and manage financial data from various Israeli bank and credit card accounts. It leverages the israeli-bank-scrapers library, stores data in an encrypted local SQLite database, and exposes MCP tools for data interaction and scraping management. This document outlines the detailed specifications for its development.
 
 ## **2\. Goals and Objectives**
 
@@ -88,7 +93,7 @@ The primary user is an individual who is fairly comfortable with code and wishes
   * @modelcontextprotocol/sdk: For MCP server implementation.  
   * vitest: For unit and integration testing.  
 * **Project Structure (Illustrative):**  
-  asher/  
+  bersaglio-fin/  
   ├── src/  
   │   ├── cli.ts                  \# CLI logic (ingest-creds)  
   │   ├── db.ts                   \# Database schema setup, saveTransactions  
@@ -224,7 +229,7 @@ An array of ScraperConfig objects:
 
 * **Credential Storage:** User's financial account credentials will be stored in the scraper\_credentials table within the encrypted transactions.db. The security of these credentials relies entirely on the strength of the user-chosen database encryption key and the security of the better-sqlite3-multiple-ciphers library.  
 * **Encryption Key Handling:**  
-  * The encryption key is never stored persistently by Asher.  
+  * The encryption key is never stored persistently by Bersaglio-Fin.  
   * It is held in memory only for the duration of the application's process.  
   * The user is responsible for securely managing their encryption key. Loss of the key means loss of access to all data.  
 * **Input Validation:** Zod will be used to validate credentials.json to prevent malformed data from being processed. SQL queries in MCP tools should be constructed carefully to prevent injection vulnerabilities (parameterized queries are standard with better-sqlite3).
@@ -238,4 +243,4 @@ An array of ScraperConfig objects:
 * Advanced data analysis and reporting features.  
 * Storing the encryption key in OS keychain (platform-dependent and complex).
 
-This document provides a comprehensive specification for the Asher project.
+This document provides a comprehensive specification for Bersaglio-Fin, based on the original Asher/asher-mcp design.

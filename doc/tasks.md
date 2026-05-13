@@ -1,6 +1,8 @@
+> Note: This project is a fork of asher-mcp. Tasks below reflect the Bersaglio-Fin fork's development status.
+
 ## **Task Breakdown / Implementation Milestones**
 
-This section outlines a high-level breakdown of tasks to implement the Asher project. Tasks can be further broken down into smaller sub-tasks during development sprints.  
+This section outlines a high-level breakdown of tasks to implement the Bersaglio-Fin project. Tasks can be further broken down into smaller sub-tasks during development sprints.  
 **Milestone 1: Core Setup & Type Definitions**
 
 * **Task 1.1:** Initialize TypeScript project, configure tsconfig.json, and set up package.json with initial dependencies (typescript, vitest, zod).  
@@ -69,7 +71,7 @@ This section outlines a high-level breakdown of tasks to implement the Asher pro
 * **Task 7.3:** Implement integration tests for "Scope 2: MCP Server Tools \+ Database \+ EncryptionKeyService".  
   * Programmatically invoke MCP tool handlers.  
   * Directly set encryption key in EncryptionKeyService.  
-* **Task 7.4:** Implement mocking for israeli-bank-scrapers at the module level for integration tests, providing static test data.  
+* **Task 7.4:** Implement mocking for israeli-bank-scrapers at the module level (vi.mock) to return predefined, static transaction data, avoiding live network calls.  
 * **Task 7.5:** Integrate the mocked israeli-bank-scrapers into the trigger\_bank\_scrape tool tests within Scope 2\.
 
 **Milestone 8: Finalization & Documentation**
@@ -80,4 +82,4 @@ This section outlines a high-level breakdown of tasks to implement the Asher pro
 * **Task 8.4:** Prepare credentials.example.json.  
 * **Task 8.5:** Final code review and refactoring.
 
-This task breakdown provides a structured approach to developing Asher. Each milestone builds upon the previous ones, allowing for incremental development and testing.  
+This task breakdown provides a structured approach to developing Bersaglio-Fin. Each milestone builds upon the previous ones, allowing for incremental development and testing.  
