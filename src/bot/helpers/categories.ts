@@ -14,5 +14,5 @@ export const CATEGORIES: Category[] = [
 ];
 
 export function getCategoryById(id: string): Category | undefined {
-  return CATEGORIES.find((c) => c.id === id);
+  return CATEGORIES.find(c => c.id === id);
 }

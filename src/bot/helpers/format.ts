@@ -11,5 +11,5 @@ export function formatDate(isoDate: string): string {
 }
 
 export function formatTable(rows: Array<{ label: string; value: string }>): string {
-  return rows.map((row) => `${row.label}: ${row.value}`).join('\n');
+  return rows.map(row => `${row.label}: ${row.value}`).join('\n');
 }

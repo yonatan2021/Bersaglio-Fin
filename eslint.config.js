@@ -14,6 +14,8 @@ export default [
       'vitest.config.ts',
       'scripts/**',
       'eslint.config.js',
+      'nextjs-mcp/**',
+      '.claude/**',
     ],
   },
 
