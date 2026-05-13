@@ -66,6 +66,7 @@
     "@types/express": "^4.17.21",
     "appdata-path": "^1.0.0",
     "better-sqlite3-multiple-ciphers": "^12.9.0",
+    "bidi-js": "^1.0.3",
     "boxen": "^8.0.1",
     "chalk": "^5.4.1",
     "commander": "^11.1.0",
