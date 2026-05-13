@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3-multiple-ciphers';
-import { BudgetRow, ScraperCredentialRow, TransactionRow } from '../types.js';
+import { BudgetRow, ManualTransactionRow, ScraperCredentialRow, TransactionRow } from '../types.js';
 import { existsSync, chmodSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
@@ -210,6 +210,16 @@ export class SQLiteDatabaseService implements DatabaseServiceInterface {
           monthly_limit REAL NOT NULL,
           updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS manual_transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT NOT NULL,
+          amount REAL NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'ILS',
+          description TEXT NOT NULL,
+          category TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
       `);
     } catch (error) {
       console.error('Failed to initialize database:', error);
@@ -383,6 +393,57 @@ export class SQLiteDatabaseService implements DatabaseServiceInterface {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to upsert budget',
+      };
+    }
+  }
+
+  public async createManualTransaction(
+    data: Omit<ManualTransactionRow, 'id' | 'created_at'>
+  ): Promise<{ success: boolean; data?: number; error?: string }> {
+    try {
+      this.ensureReady();
+      const db = this.assertInitialized();
+      const result = db
+        .prepare(
+          `
+        INSERT INTO manual_transactions (date, amount, currency, description, category)
+        VALUES (?, ?, ?, ?, ?)
+      `
+        )
+        .run(data.date, data.amount, data.currency, data.description, data.category);
+      return { success: true, data: Number(result.lastInsertRowid) };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create transaction',
+      };
+    }
+  }
+
+  public async getManualTransactions(
+    startDate?: string,
+    endDate?: string
+  ): Promise<{ success: boolean; data?: ManualTransactionRow[]; error?: string }> {
+    try {
+      this.ensureReady();
+      const db = this.assertInitialized();
+      let query = 'SELECT * FROM manual_transactions';
+      const params: string[] = [];
+      if (startDate) {
+        query += ' WHERE date >= ?';
+        params.push(startDate);
+      }
+      if (endDate) {
+        query += startDate ? ' AND date < ?' : ' WHERE date < ?';
+        params.push(endDate);
+      }
+      query += ' ORDER BY date DESC';
+      const rows = params.length > 0 ? db.prepare(query).all(...params) : db.prepare(query).all();
+      return { success: true, data: rows as ManualTransactionRow[] };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get transactions',
       };
     }
   }

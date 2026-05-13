@@ -170,3 +170,13 @@ export interface BudgetRow {
   monthly_limit: number;
   updated_at: string;
 }
+
+export interface ManualTransactionRow {
+  id: number;
+  date: string; // ISO date string, e.g. '2025-03-15'
+  amount: number;
+  currency: string; // e.g. 'ILS'
+  description: string;
+  category: string;
+  created_at: string;
+}

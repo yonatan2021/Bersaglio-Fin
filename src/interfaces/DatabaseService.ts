@@ -1,4 +1,4 @@
-import { BudgetRow, ScraperCredentialRow, TransactionRow } from '../types.js';
+import { BudgetRow, ManualTransactionRow, ScraperCredentialRow, TransactionRow } from '../types.js';
 
 export interface DatabaseService {
   databaseExists(): Promise<boolean>;
@@ -47,4 +47,13 @@ export interface DatabaseService {
     category: string,
     monthlyLimit: number
   ): Promise<{ success: boolean; error?: string }>;
+
+  // Manual transaction methods
+  createManualTransaction(
+    data: Omit<ManualTransactionRow, 'id' | 'created_at'>
+  ): Promise<{ success: boolean; data?: number; error?: string }>;
+  getManualTransactions(
+    startDate?: string,
+    endDate?: string
+  ): Promise<{ success: boolean; data?: ManualTransactionRow[]; error?: string }>;
 }

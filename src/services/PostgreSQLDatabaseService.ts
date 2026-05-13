@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { BudgetRow, ScraperCredentialRow, TransactionRow } from '../types.js';
+import { BudgetRow, ManualTransactionRow, ScraperCredentialRow, TransactionRow } from '../types.js';
 import { validateSelectQuery } from '../utils/sqlValidation.js';
 import { DatabaseService } from '../interfaces/DatabaseService.js';
 
@@ -150,6 +150,16 @@ export class PostgreSQLDatabaseService implements DatabaseService {
           category TEXT NOT NULL UNIQUE,
           monthly_limit DOUBLE PRECISION NOT NULL,
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS manual_transactions (
+          id SERIAL PRIMARY KEY,
+          date TEXT NOT NULL,
+          amount DOUBLE PRECISION NOT NULL,
+          currency TEXT NOT NULL DEFAULT 'ILS',
+          description TEXT NOT NULL,
+          category TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
       `);
     } catch (error) {
@@ -435,6 +445,63 @@ export class PostgreSQLDatabaseService implements DatabaseService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to upsert budget',
+      };
+    }
+  }
+
+  public async createManualTransaction(
+    data: Omit<ManualTransactionRow, 'id' | 'created_at'>
+  ): Promise<{ success: boolean; data?: number; error?: string }> {
+    try {
+      this.ensureReady();
+      const client = await this.pool!.connect();
+      try {
+        const result = await client.query(
+          `INSERT INTO manual_transactions (date, amount, currency, description, category)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id`,
+          [data.date, data.amount, data.currency, data.description, data.category]
+        );
+        return { success: true, data: result.rows[0].id };
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create transaction',
+      };
+    }
+  }
+
+  public async getManualTransactions(
+    startDate?: string,
+    endDate?: string
+  ): Promise<{ success: boolean; data?: ManualTransactionRow[]; error?: string }> {
+    try {
+      this.ensureReady();
+      const client = await this.pool!.connect();
+      try {
+        let query = 'SELECT * FROM manual_transactions';
+        const params: string[] = [];
+        if (startDate) {
+          query += ' WHERE date >= $1';
+          params.push(startDate);
+        }
+        if (endDate) {
+          query += startDate ? ' AND date < $' + (params.length + 1) : ' WHERE date < $1';
+          params.push(endDate);
+        }
+        query += ' ORDER BY date DESC';
+        const result = await client.query(query, params);
+        return { success: true, data: result.rows as ManualTransactionRow[] };
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get transactions',
       };
     }
   }
