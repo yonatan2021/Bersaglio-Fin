@@ -1,18 +1,13 @@
-import bidiFactory from 'bidi-js';
+// LRO (U+202D) forces the terminal's BiDi engine to display all following
+// characters left-to-right, overriding Hebrew's natural RTL property.
+// PDF (U+202C) closes the override scope.
+// This prevents macOS Terminal from reversing Hebrew text in LTR UI contexts.
+const LRO = '‭';
+const PDF = '‬';
 
-const bidi = bidiFactory();
-
-// Convert logical-order Hebrew string to visual order for LTR terminal display.
-// MUST be called on plain strings BEFORE chalk/ANSI decoration — bidi-js cannot
-// process ANSI escape codes and will corrupt colored output if called after chalk.
+// Wrap Hebrew string so terminal BiDi does not reverse it.
+// Call on plain strings BEFORE chalk/ANSI decoration.
 export function visualHebrew(str: string): string {
   if (!str) return str;
-  const embeddingLevels = bidi.getEmbeddingLevels(str, 'rtl');
-  const segments = bidi.getReorderSegments(str, embeddingLevels);
-  const chars = [...str]; // spread handles surrogate pairs and emoji correctly
-  for (const [start, end] of segments) {
-    const reversed = chars.slice(start, end + 1).reverse();
-    chars.splice(start, end - start + 1, ...reversed);
-  }
-  return chars.join('');
+  return `${LRO}${str}${PDF}`;
 }

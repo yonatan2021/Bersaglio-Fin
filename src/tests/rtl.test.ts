@@ -1,29 +1,31 @@
 import { describe, it, expect } from 'vitest';
 import { visualHebrew } from '../utils/rtl.js';
 
+const LRO = '‭';
+const PDF = '‬';
+
 describe('visualHebrew', () => {
-  it('converts pure Hebrew to visual LTR order', () => {
-    // שלום stored logically → םולש in visual LTR order for BiDi terminal display
-    expect(visualHebrew('שלום')).toBe('םולש');
+  it('wraps Hebrew string with LRO/PDF override markers', () => {
+    const result = visualHebrew('שלום');
+    expect(result).toBe(`${LRO}שלום${PDF}`);
   });
 
-  it('reverses full Hebrew phrase', () => {
-    // הפעל שירות (activate service) → תוריש לעפה (visual LTR encoding)
-    expect(visualHebrew('הפעל שירות')).toBe('תוריש לעפה');
+  it('preserves Hebrew text unchanged between markers', () => {
+    const result = visualHebrew('הפעל שירות');
+    expect(result).toBe(`${LRO}הפעל שירות${PDF}`);
   });
 
   it('returns empty string unchanged', () => {
     expect(visualHebrew('')).toBe('');
   });
 
-  it('returns non-Hebrew ASCII unchanged', () => {
-    expect(visualHebrew('hello')).toBe('hello');
+  it('wraps ASCII text with LRO/PDF markers', () => {
+    const result = visualHebrew('hello');
+    expect(result).toBe(`${LRO}hello${PDF}`);
   });
 
-  it('does not corrupt mixed emoji+Hebrew — emoji stays, Hebrew is reordered', () => {
+  it('preserves emoji and Hebrew in mixed content', () => {
     const result = visualHebrew('🚀 הפעל שירות');
-    expect(result).toContain('🚀');
-    // The Hebrew chars should all still be present
-    expect(result).toMatch(/[א-ת]/);
+    expect(result).toBe(`${LRO}🚀 הפעל שירות${PDF}`);
   });
 });
