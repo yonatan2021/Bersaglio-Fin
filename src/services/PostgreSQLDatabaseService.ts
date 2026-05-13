@@ -144,6 +144,13 @@ export class PostgreSQLDatabaseService implements DatabaseService {
           PRIMARY KEY (scraper_credential_id, identifier),
           FOREIGN KEY (scraper_credential_id) REFERENCES scraper_credentials(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS budgets (
+          id SERIAL PRIMARY KEY,
+          category TEXT NOT NULL UNIQUE,
+          monthly_limit DOUBLE PRECISION NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
       `);
     } catch (error) {
       console.error('Failed to initialize database:', error);

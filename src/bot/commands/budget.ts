@@ -26,12 +26,16 @@ export async function budgetCommand(ctx: BotContext): Promise<void> {
         COALESCE(category, 'ללא קטגוריה') as category,
         SUM(chargedAmount) as total
       FROM transactions
-      WHERE date >= '${startDate}' AND date < '${endDate}'
+      WHERE date >= '${startDate}' AND date < '${endDate}' AND chargedAmount > 0
       GROUP BY COALESCE(category, 'ללא קטגוריה')
     `);
 
     const spendingMap = new Map<string, number>();
-    if (spendingResult.success && spendingResult.data) {
+    if (!spendingResult.success) {
+      await ctx.reply('שגיאה בטעינת נתוני ההוצאות. נסה שוב.');
+      return;
+    }
+    if (spendingResult.data) {
       for (const row of spendingResult.data as Array<{ category: string; total: number }>) {
         spendingMap.set(row.category, row.total);
       }
