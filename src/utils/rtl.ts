@@ -1,13 +1,55 @@
-// LRO (U+202D) forces the terminal's BiDi engine to display all following
-// characters left-to-right, overriding Hebrew's natural RTL property.
-// PDF (U+202C) closes the override scope.
-// This prevents macOS Terminal from reversing Hebrew text in LTR UI contexts.
-const LRO = '‭';
-const PDF = '‬';
+// U+0590-05FF: Hebrew block. U+FB1D-FB4F: Hebrew Presentation Forms.
+const HEBREW_RE = /[֐-׿יִ-ﭏ]/;
 
-// Wrap Hebrew string so terminal BiDi does not reverse it.
-// Call on plain strings BEFORE chalk/ANSI decoration.
+function isHebrew(ch: string): boolean {
+  return HEBREW_RE.test(ch);
+}
+
+// Split text into directional runs. Whitespace gets its own neutral run.
+function getRuns(text: string): Array<{ text: string; hebrew: boolean }> {
+  const runs: Array<{ text: string; hebrew: boolean }> = [];
+  const chars = [...text];
+  let i = 0;
+
+  while (i < chars.length) {
+    if (/\s/.test(chars[i])) {
+      let j = i;
+      while (j < chars.length && /\s/.test(chars[j])) j++;
+      runs.push({ text: chars.slice(i, j).join(''), hebrew: false });
+      i = j;
+    } else {
+      const hebrew = isHebrew(chars[i]);
+      let j = i + 1;
+      while (j < chars.length && !/\s/.test(chars[j]) && isHebrew(chars[j]) === hebrew) j++;
+      runs.push({ text: chars.slice(i, j).join(''), hebrew });
+      i = j;
+    }
+  }
+
+  return runs;
+}
+
+// Convert Hebrew string from logical order to visual order for non-BiDi terminals.
+// Strategy: reverse run sequence (RTL paragraph), reverse chars within Hebrew runs.
+// LTR prefix (emoji etc.) is preserved as-is.
 export function visualHebrew(str: string): string {
-  if (!str) return str;
-  return `${LRO}${str}${PDF}`;
+  if (!str || !HEBREW_RE.test(str)) return str;
+
+  const chars = [...str];
+  const firstHeb = chars.findIndex(isHebrew);
+  if (firstHeb === -1) return str;
+
+  let lastHeb = chars.length - 1;
+  while (lastHeb > firstHeb && !isHebrew(chars[lastHeb])) lastHeb--;
+
+  const prefix = chars.slice(0, firstHeb).join('');
+  const middle = chars.slice(firstHeb, lastHeb + 1).join('');
+  const suffix = chars.slice(lastHeb + 1).join('');
+
+  const visual = getRuns(middle)
+    .reverse()
+    .map(r => (r.hebrew ? [...r.text].reverse().join('') : r.text))
+    .join('');
+
+  return prefix + visual + suffix;
 }
