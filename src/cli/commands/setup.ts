@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { visualHebrew } from '../../utils/rtl.js';
+import { runEnvWizard } from './setupEnvWizard.js';
 import { fileURLToPath } from 'url';
 import { ingestCredentials } from '../ingestCredentials.js';
 import { configureClaudeIntegration } from '../../utils/claudeConfig.js';
@@ -92,6 +93,10 @@ export async function setupDb(): Promise<void> {
     );
     process.exit(1);
   }
+}
+
+export async function setupEnv(opts: { dryRun?: boolean; force?: boolean } = {}): Promise<void> {
+  await runEnvWizard(opts);
 }
 
 export async function setupTest(): Promise<void> {

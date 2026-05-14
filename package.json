@@ -34,7 +34,8 @@
     "cli": "node --no-warnings=ExperimentalWarning --import tsx ./src/cli/index.ts",
     "ingest-creds": "node --no-warnings=ExperimentalWarning --import tsx ./src/cli/index.ts ingest-creds",
     "configure:claude": "node --no-warnings=ExperimentalWarning --import tsx ./src/cli/index.ts configure:claude",
-    "start:bot": "tsx src/bot/index.ts"
+    "start:bot": "tsx src/bot/index.ts",
+    "setup:env": "tsx scripts/setup-env.ts"
   },
   "lint-staged": {
     "src/**/*.{js,ts,tsx}": [

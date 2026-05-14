@@ -16,7 +16,7 @@ import { stopService, stopAll } from './commands/stop.js';
 import { restartService, restartAll } from './commands/restart.js';
 import { showStatus } from './commands/status.js';
 import { runSync } from './commands/sync.js';
-import { setupCreds, setupClaude, setupDb, setupTest } from './commands/setup.js';
+import { setupCreds, setupClaude, setupDb, setupEnv, setupTest } from './commands/setup.js';
 import { diagNotify, diagDb, diagMcp } from './commands/diag.js';
 import { ingestCredentials } from './ingestCredentials.js';
 import { configureClaudeIntegration } from '../utils/claudeConfig.js';
@@ -129,6 +129,15 @@ setupCmd
   .description('אתחל מסד נתונים')
   .action(async () => {
     await setupDb();
+  });
+
+setupCmd
+  .command('env')
+  .description('הגדר קובץ .env באופן אינטראקטיבי')
+  .option('--dry-run', 'הצג ערכים ללא כתיבה לדיסק')
+  .option('--force', 'כתוב .env ללא אינטראקציה (מצב CI)')
+  .action(async (opts: { dryRun?: boolean; force?: boolean }) => {
+    await setupEnv(opts);
   });
 
 setupCmd
@@ -286,6 +295,7 @@ if (process.argv.length === 2) {
           name: 'sub',
           message: visualHebrew('הגדרות:'),
           choices: [
+            { name: visualHebrew('הגדר קובץ .env'), value: 'env' },
             { name: visualHebrew('ייבא פרטי גישה לבנקים'), value: 'creds' },
             { name: visualHebrew('הגדר Claude Desktop'), value: 'claude' },
             { name: visualHebrew('אתחל מסד נתונים'), value: 'db' },
@@ -294,7 +304,9 @@ if (process.argv.length === 2) {
         },
       ]);
 
-      if (sub === 'creds') {
+      if (sub === 'env') {
+        await setupEnv();
+      } else if (sub === 'creds') {
         const { file } = await inquirer.prompt([
           { type: 'input', name: 'file', message: visualHebrew('נתיב לקובץ JSON:') },
         ]);
