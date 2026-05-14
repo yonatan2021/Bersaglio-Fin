@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDbInstance } from '@main-src/services/DatabaseService.js';
+import { getDbInstance } from '@main-src/services/DatabaseService';
 
 export const runtime = 'nodejs';
 

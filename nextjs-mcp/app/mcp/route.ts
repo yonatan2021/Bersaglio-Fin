@@ -1,8 +1,8 @@
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
 import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
-import { getDbInstance } from '@main-src/services/DatabaseService.js';
-import { encryptionKeyService } from '@main-src/services/EncryptionKeyService.js';
+import { getDbInstance } from '@main-src/services/DatabaseService';
+import { encryptionKeyService } from '@main-src/services/EncryptionKeyService';
 
 interface TextContent {
   type: 'text';

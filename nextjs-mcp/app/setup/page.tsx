@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 
 type Step = 1 | 2 | 3;
 
-export default function SetupPage() {
+function SetupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialStep = (parseInt(searchParams.get('step') ?? '1') as Step) || 1;
@@ -104,5 +104,13 @@ export default function SetupPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense>
+      <SetupPageContent />
+    </Suspense>
   );
 }

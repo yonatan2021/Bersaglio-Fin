@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getDbInstance } from '@main-src/services/DatabaseService.js';
+import { getDbInstance } from '@main-src/services/DatabaseService';
 import { DashboardClient } from './_dashboard/DashboardClient';
 
 export const runtime = 'nodejs';

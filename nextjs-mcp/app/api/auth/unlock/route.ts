@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { encryptionKeyService } from '@main-src/services/EncryptionKeyService.js';
-import { getDbInstance } from '@main-src/services/DatabaseService.js';
+import { encryptionKeyService } from '@main-src/services/EncryptionKeyService';
+import { getDbInstance } from '@main-src/services/DatabaseService';
 
 export const runtime = 'nodejs';
 

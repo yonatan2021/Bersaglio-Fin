@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getInitializedDb } from '@/lib/db';
-import { scraperConfigSchema } from '@main-src/schemas.js';
+import { scraperConfigSchema } from '@main-src/schemas';
 
 export const runtime = 'nodejs';
 
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     scraper_type,
     friendly_name,
     credentials: JSON.stringify(credentials),
-    tags: (tags ?? []) as any, // DB service stringifies arrays internally
+    tags: tags && tags.length > 0 ? JSON.stringify(tags) : null,
   });
 
   return NextResponse.json({ id }, { status: 201 });

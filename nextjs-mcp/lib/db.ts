@@ -1,6 +1,6 @@
 import { getEncryptionKey } from './session';
-import { getDbInstance } from '@main-src/services/DatabaseService.js';
-import { encryptionKeyService } from '@main-src/services/EncryptionKeyService.js';
+import { getDbInstance } from '@main-src/services/DatabaseService';
+import { encryptionKeyService } from '@main-src/services/EncryptionKeyService';
 import { NextResponse } from 'next/server';
 
 export async function getInitializedDb() {

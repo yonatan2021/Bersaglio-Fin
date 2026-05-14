@@ -1,6 +1,5 @@
-import israeliBankScrapers from 'israeli-bank-scrapers';
+import { createScraper } from 'israeli-bank-scrapers';
 import { sendNotification } from '../utils/notify.js';
-const { createScraper } = israeliBankScrapers;
 import type { ScraperOptions } from 'israeli-bank-scrapers';
 import { DatabaseFactory } from './DatabaseFactory.js';
 import { DatabaseService } from '../interfaces/DatabaseService.js';

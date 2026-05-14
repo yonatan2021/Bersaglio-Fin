@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { encryptionKeyService } from '@main-src/services/EncryptionKeyService.js';
+import { encryptionKeyService } from '@main-src/services/EncryptionKeyService';
 
 export const runtime = 'nodejs';
 

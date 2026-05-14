@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getInitializedDb } from '@/lib/db';
-import { scraperService } from '@main-src/services/ScraperService.js';
+import { scraperService } from '@main-src/services/ScraperService';
 
 export const runtime = 'nodejs';
 
