@@ -9,6 +9,7 @@ const links = [
   { href: '/', label: 'לוח בקרה' },
   { href: '/accounts', label: 'חשבונות' },
   { href: '/transactions', label: 'עסקאות' },
+  { href: '/budget', label: 'תקציב' },
   { href: '/settings', label: 'הגדרות' },
 ];
 
