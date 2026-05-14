@@ -16,8 +16,15 @@ import { stopService, stopAll } from './commands/stop.js';
 import { restartService, restartAll } from './commands/restart.js';
 import { showStatus } from './commands/status.js';
 import { runSync } from './commands/sync.js';
-import { setupCreds, setupClaude, setupDb, setupEnv, setupTest } from './commands/setup.js';
-import { diagNotify, diagDb, diagMcp } from './commands/diag.js';
+import {
+  setupCreds,
+  setupClaude,
+  setupDb,
+  setupEnv,
+  setupTest,
+  setupHermes,
+} from './commands/setup.js';
+import { diagNotify, diagDb, diagMcp, diagHermes } from './commands/diag.js';
 import { ingestCredentials } from './ingestCredentials.js';
 import { configureClaudeIntegration } from '../utils/claudeConfig.js';
 import { sendNotification } from '../utils/notify.js';
@@ -125,13 +132,6 @@ setupCmd
   });
 
 setupCmd
-  .command('db')
-  .description('אתחל מסד נתונים')
-  .action(async () => {
-    await setupDb();
-  });
-
-setupCmd
   .command('env')
   .description('הגדר קובץ .env באופן אינטראקטיבי')
   .option('--dry-run', 'הצג ערכים ללא כתיבה לדיסק')
@@ -141,10 +141,24 @@ setupCmd
   });
 
 setupCmd
+  .command('db')
+  .description('אתחל מסד נתונים')
+  .action(async () => {
+    await setupDb();
+  });
+
+setupCmd
   .command('test')
   .description('בדוק את כל רכיבי המערכת')
   .action(async () => {
     await setupTest();
+  });
+
+setupCmd
+  .command('hermes')
+  .description('הגדר חיבור סוכן Hermes למסד MCP')
+  .action(async () => {
+    await setupHermes();
   });
 
 // ── diag ───────────────────────────────────────────────────────────────────
@@ -173,6 +187,13 @@ diagCmd
   .description('בדוק שרת MCP')
   .action(async () => {
     await diagMcp();
+  });
+
+diagCmd
+  .command('hermes')
+  .description('בדוק חיבור Hermes למסד MCP')
+  .action(async () => {
+    await diagHermes();
   });
 
 // ── hidden backward-compat aliases ─────────────────────────────────────────
@@ -298,6 +319,7 @@ if (process.argv.length === 2) {
             { name: visualHebrew('הגדר קובץ .env'), value: 'env' },
             { name: visualHebrew('ייבא פרטי גישה לבנקים'), value: 'creds' },
             { name: visualHebrew('הגדר Claude Desktop'), value: 'claude' },
+            { name: visualHebrew('הגדר Hermes MCP'), value: 'hermes' },
             { name: visualHebrew('אתחל מסד נתונים'), value: 'db' },
             { name: visualHebrew('בדוק את כל הרכיבים'), value: 'test' },
           ],
@@ -313,6 +335,8 @@ if (process.argv.length === 2) {
         await setupCreds(file);
       } else if (sub === 'claude') {
         await setupClaude();
+      } else if (sub === 'hermes') {
+        await setupHermes();
       } else if (sub === 'db') {
         await setupDb();
       } else {
@@ -331,6 +355,7 @@ if (process.argv.length === 2) {
             { name: visualHebrew('בדוק התראות'), value: 'notify' },
             { name: visualHebrew('בדוק מסד נתונים'), value: 'db' },
             { name: visualHebrew('בדוק שרת MCP'), value: 'mcp' },
+            { name: visualHebrew('בדוק חיבור Hermes'), value: 'hermes' },
           ],
         },
       ]);
@@ -339,6 +364,8 @@ if (process.argv.length === 2) {
         await diagNotify({ title: 'Bersaglio — בדיקה', message: 'זוהי התראת בדיקה', sound: false });
       } else if (sub === 'db') {
         await diagDb();
+      } else if (sub === 'hermes') {
+        await diagHermes();
       } else {
         await diagMcp();
       }
