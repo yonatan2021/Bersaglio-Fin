@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
   const startDate = searchParams.get('startDate') ?? undefined;
   const endDate = searchParams.get('endDate') ?? undefined;
   const scraperCredentialId = searchParams.get('accountId');
+  const category = searchParams.get('category') ?? undefined;
+  const search = searchParams.get('search') ?? undefined;
 
   let query = `
     SELECT t.*, sc.friendly_name, sc.scraper_type
@@ -25,6 +27,8 @@ export async function GET(req: NextRequest) {
   if (startDate) { query += ' AND t.date >= ?'; params.push(startDate); }
   if (endDate) { query += ' AND t.date <= ?'; params.push(endDate); }
   if (scraperCredentialId) { query += ' AND t.scraper_credential_id = ?'; params.push(Number(scraperCredentialId)); }
+  if (category) { query += ' AND t.category = ?'; params.push(category); }
+  if (search) { query += ' AND t.description LIKE ?'; params.push(`%${search}%`); }
 
   query += ' ORDER BY t.date DESC';
   query += ` LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}`;
