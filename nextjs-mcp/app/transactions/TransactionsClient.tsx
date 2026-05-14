@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -23,15 +23,39 @@ export function TransactionsClient() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  // filters
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [hasMore, setHasMore] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState(''); // debounced
+  const [category, setCategory] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
+
+  // debounce search input
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function handleSearchChange(v: string) {
+    setSearchInput(v);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearch(v), 300);
+  }
+
+  // load categories once
+  useEffect(() => {
+    fetch('/api/transactions/categories')
+      .then(r => r.json())
+      .then(d => setCategories(d.categories ?? []))
+      .catch(() => {});
+  }, []);
 
   async function load(p: number = 1, reset = false) {
     setLoading(true);
     const params = new URLSearchParams({ page: String(p), pageSize: '50' });
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
+    if (search) params.set('search', search);
+    if (category) params.set('category', category);
     try {
       const r = await fetch(`/api/transactions?${params}`);
       if (!r.ok) { setLoading(false); return; }
@@ -42,7 +66,18 @@ export function TransactionsClient() {
     setLoading(false);
   }
 
-  useEffect(() => { load(1, true); setPage(1); }, [startDate, endDate]);
+  // re-fetch when any filter changes
+  useEffect(() => { load(1, true); setPage(1); }, [startDate, endDate, search, category]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const hasActiveFilters = startDate || endDate || search || category;
+
+  function clearFilters() {
+    setStartDate('');
+    setEndDate('');
+    setSearchInput('');
+    setSearch('');
+    setCategory('');
+  }
 
   function handleExport() {
     const header = ['תאריך', 'תיאור', 'סכום', 'מטבע', 'קטגוריה', 'חשבון'].join(',');
@@ -77,20 +112,46 @@ export function TransactionsClient() {
           </Button>
         </header>
 
-        <div className="flex flex-wrap gap-3 mb-4 items-center">
-          <div className="flex items-center gap-2">
+        {/* filter bar */}
+        <div className="flex flex-wrap gap-2 mb-4 items-center">
+          <Input
+            type="search"
+            placeholder="חיפוש לפי תיאור..."
+            value={searchInput}
+            onChange={e => handleSearchChange(e.target.value)}
+            className="h-8 w-52"
+          />
+
+          {categories.length > 0 && (
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+            >
+              <option value="">כל הקטגוריות</option>
+              {categories.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          )}
+
+          <div className="flex items-center gap-1">
             <label className="text-xs text-muted-foreground">מ-</label>
             <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-auto h-8" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <label className="text-xs text-muted-foreground">עד</label>
             <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-auto h-8" />
           </div>
-          {(startDate || endDate) && (
-            <Button variant="ghost" size="sm" onClick={() => { setStartDate(''); setEndDate(''); }}>נקה</Button>
+
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" className="h-8 text-muted-foreground" onClick={clearFilters}>
+              נקה פילטרים
+            </Button>
           )}
         </div>
 
+        {/* table */}
         <div className="border border-border">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-card">
@@ -107,13 +168,28 @@ export function TransactionsClient() {
                 <tr key={`${t.scraper_credential_id}-${t.identifier}-${i}`} className="hover:bg-card/50">
                   <td className="p-3 text-muted-foreground whitespace-nowrap font-mono tabular-nums text-xs">{t.date.split('T')[0]}</td>
                   <td className="p-3 max-w-xs truncate">{t.description}</td>
-                  <td className="p-3 text-muted-foreground">{t.category ?? '—'}</td>
+                  <td className="p-3">
+                    {t.category ? (
+                      <button
+                        className="text-muted-foreground hover:text-foreground hover:underline text-xs"
+                        onClick={() => setCategory(t.category!)}
+                      >
+                        {t.category}
+                      </button>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className="p-3 text-muted-foreground text-xs">{t.friendly_name}</td>
                   <td className="p-3 text-end font-mono tabular-nums whitespace-nowrap">{fmt.format(t.chargedAmount)}</td>
                 </tr>
               ))}
               {transactions.length === 0 && !loading && (
-                <tr><td colSpan={5} className="p-12 text-center text-muted-foreground text-sm">אין עסקאות</td></tr>
+                <tr>
+                  <td colSpan={5} className="p-12 text-center text-muted-foreground text-sm">
+                    {hasActiveFilters ? 'אין עסקאות התואמות לפילטר הנוכחי' : 'אין עסקאות — סנכרן חשבונות כדי להתחיל'}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

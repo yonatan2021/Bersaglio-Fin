@@ -10,9 +10,9 @@ export function SettingsClient() {
   }
 
   async function handleWipe() {
-    if (!confirm('למחוק את כל החשבונות והעסקאות? פעולה זו אינה הפיכה.')) return;
+    if (!confirm('האם למחוק את כל החשבונות והעסקאות? לא ניתן לשחזר אחרי המחיקה.')) return;
     await fetch('/api/accounts', { method: 'DELETE' });
-    alert('הנתונים נמחקו.');
+    alert('כל הנתונים נמחקו.');
     window.location.href = '/';
   }
 
@@ -21,38 +21,27 @@ export function SettingsClient() {
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
         <header>
           <h1 className="font-display text-3xl">הגדרות</h1>
-          <p className="text-sm text-muted-foreground mt-1">תצורת אפליקציה ומסד נתונים</p>
+          <p className="text-sm text-muted-foreground mt-1">ניהול האפליקציה</p>
         </header>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base font-display">אבטחה</CardTitle>
-            <CardDescription>נעילה אוטומטית אחרי 30 דקות חוסר פעילות</CardDescription>
+            <CardTitle className="text-base font-display">נעילת מסך</CardTitle>
+            <CardDescription>
+              האפליקציה ננעלת אוטומטית אחרי 30 דקות ללא פעילות. ניתן לנעול ידנית בכל עת.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="outline" onClick={handleLock}>נעל עכשיו</Button>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-display">Claude Desktop (MCP)</CardTitle>
-            <CardDescription>
-              כדי שה-MCP route יעבוד ללא פתיחת ה-dashboard, הגדר משתנה סביבה ב-<code className="text-xs bg-muted px-1 py-0.5">.env.local</code>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <pre className="bg-muted p-3 text-xs text-start font-mono" dir="ltr">ENCRYPTION_KEY=your-key-here</pre>
-            <p className="text-xs text-muted-foreground">
-              ללא משתנה זה, Claude Desktop יצטרך שה-dashboard יהיה פתוח ופתוח לפני שליחת שאילתות.
-            </p>
-          </CardContent>
-        </Card>
-
         <Card className="border-destructive/40">
           <CardHeader>
-            <CardTitle className="text-base font-display text-destructive">אזור סכנה</CardTitle>
-            <CardDescription>פעולות בלתי הפיכות</CardDescription>
+            <CardTitle className="text-base font-display text-destructive">מחיקת כל הנתונים</CardTitle>
+            <CardDescription>
+              פעולה זו תמחק את כל החשבונות המחוברים ואת כל העסקאות השמורות. לא ניתן לשחזר.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="destructive" onClick={handleWipe}>
