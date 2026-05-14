@@ -1,4 +1,4 @@
-# 🇮🇱 Bersaglio-Fin - שרת MCP לנתונים פיננסיים אישיים
+# Bersaglio-Fin — מערכת ניהול פיננסים אישיים
 
 [English](./README.md)
 
@@ -8,160 +8,332 @@
 [![MCP](https://img.shields.io/badge/MCP-Supported-orange?style=flat-square)](https://modelcontextprotocol.io/)
 [![Vitest](https://img.shields.io/badge/Tested%20with-Vitest-yellow?style=flat-square&logo=vitest)](https://vitest.dev/)
 
-> **התקרבו לנתונים שלכם, על סטרואידים!**
+> רכז, נתח, ונהל את הנתונים הפיננסיים שלך — הכל על המחשב שלך בלבד.
 
-Bersaglio-Fin הוא צבר (Aggregator) נתונים פיננסיים מאובטח, הפועל במודל "Local-first" עבור בנקים וחברות כרטיסי אשראי ישראליים. המערכת בנויה ב-TypeScript ומבוססת על [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers). Bersaglio-Fin עוזר לכם לרכז ולנתח את העסקאות הפיננסיות שלכם ממספר מקורות, תוך שמירה על פרטיות ואבטחת הנתונים שלכם.
+Bersaglio-Fin סורק עסקאות מבנקים וחברות כרטיסי אשראי ישראליים, שומר אותן במסד נתונים SQLite מוצפן מקומי, וחושף אותן דרך שלושה ממשקים: שרת MCP (לשימוש Claude), בוט טלגרם (לגישה מהנייד), ולוח בקרה Next.js (לניהול). שום מידע לא נשלח לשרתים חיצוניים.
 
-![demo](./.github/demo.gif)
+מבוסס על [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers).
 
 ---
 
-## ✨ מה חדש בפורק (Fork) הזה?
+## מה עובד עכשיו
 
-- **מיתוג מחדש**: הגירה מלאה מ-`asher-mcp` ל-`Bersaglio-Fin`.
-- **תחזוקה**: מתוחזק כעת על ידי [@yonatan2021](https://github.com/yonatan2021).
-- **תיעוד מאוחד**: עקרונות הארכיטקטורה והאבטחה הליבתיים שולבו בתוך ה-README הראשי.
-- **יכולות בוט משופרות**: בוט טלגרם מלא לגישה מהנייד ודיווח עסקאות.
+| רכיב | סטטוס | תיאור |
+|------|--------|-------|
+| שרת MCP | ✅ עובד | stdio (Claude Desktop) + HTTP על פורט 3001 |
+| בוט טלגרם | ✅ עובד | כל 7 הפקודות ממומשות |
+| לוח בקרה | ✅ נבנה | 5 דפים: סקירה, חשבונות, תקציב, עסקאות, הגדרות |
+| `fin` CLI | ✅ עובד | הפעלה/עצירה, סנכרון, הגדרות, אבחון |
+| שכבת שירותים | ✅ עובד | סורק, מסד נתונים, הצפנה — נבדק היטב |
+| סוכן Hermes | 🔜 מתוכנן | סוכן AI אישי, יתחבר דרך MCP |
 
-## 🚀 תכונות עיקריות
+---
 
-- **🤖 שרת MCP**: מימוש פרוטוקול Model Context Protocol לשילוב קל עם מארחי MCP (כמו Claude).
-- **🇮🇱 אינטגרציה רחבה**: תמיכה בכל הבנקים וחברות האשראי בישראל הנתמכים על ידי [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers).
-- **🏠 Local-First**: הנתונים הפיננסיים שלכם לעולם לא עוזבים את המחשב שלכם.
-- **🔒 הצפנה**: נתונים רגישים מוצפנים במצב מנוחה (At rest) באמצעות SQLCipher (`better-sqlite3-multiple-ciphers`).
-- **📱 בוט טלגרם**: צפייה בחשבונות, תקציבים ודוחות חודשיים מכל מקום באמצעות בוט מאובטח.
-- **💻 CLI**: הגדרה וניהול קלים דרך שורת הפקודה.
-- **TypeScript**: בנוי עם הקפדה על טיפוסיות (Type safety) ו-Native ESM.
+## ארכיטקטורה
 
-## 🛠 טכנולוגיות (Tech Stack)
+שלושה ממשקים, מסד נתונים מוצפן אחד:
 
-- **Runtime**: [Node.js](https://nodejs.org/) (v18+)
-- **שפה**: [TypeScript](https://www.typescriptlang.org/)
-- **מסד נתונים**: [SQLite](https://www.sqlite.org/) עם [SQLCipher](https://www.zetetic.net/sqlcipher/)
-- **סריקה**: [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers)
-- **בוט**: [grammY](https://grammy.dev/)
-- **בדיקות**: [Vitest](https://vitest.dev/)
+```
+בנקים ישראליים (הפועלים, לאומי, דיסקונט, מקס, ישראכרט...)
+        │ israeli-bank-scrapers
+        ▼
+   ScraperService  +  EncryptionKeyService  +  DatabaseService
+        │
+        ├─── שרת MCP (Claude Desktop / Hermes)
+        ├─── בוט טלגרם (נייד, קריאה בלבד)
+        └─── לוח בקרה (Next.js, ניהול)
+```
 
-## 🏗 ארכיטקטורת מערכת
+**כלל גבול:** הבוט הוא לקריאה בלבד — אין פרטי גישה שעוברים דרכו. כל הגדרה (חיבור בנקים, קביעת תקציבים) נמצאת בלוח הבקרה. שרת MCP הוא שכבת הגישה לנתונים לסוכני AI.
 
-Bersaglio-Fin עוקב אחרי ארכיטקטורת "Local-first" עם שלושה ממשקי צריכה המשתפים שכבת נתונים מאוחדת:
+---
 
-- **שכבת הליבה (`src/services/`)**: מכילה לוגיקה עסקית משותפת הכוללת את ה-`ScraperService` לסריקת בנקים, `EncryptionKeyService` לניהול מפתח הצפנה בזיכרון, ו-`DatabaseService` לאחסון SQLite מוצפן.
-- **שרת MCP (`src/mcp/`)**: שכבת הגישה העיקרית לנתונים עבור סוכני AI כמו Claude Desktop או Hermes.
-- **בוט טלגרם (`src/bot/`)**: ממשק לקריאה בלבד לגישה מהנייד, המספק סטטוס תקציב ודוחות עסקאות.
-- **לוח בקרה (`nextjs-mcp/`)**: ממשק ניהול ב-Next.js להגדרות מלאות וניתוחים מפורטים.
-
-## דרישות קדם
+## דרישות מקדימות
 
 - Node.js 18+
 - npm
+- Chromium — מותקן אוטומטית על ידי ספריית הסורק (דרך Playwright)
 
-## התקנה
+---
 
-1. שכפלו את המאגר (Repository):
-   ```bash
-   git clone https://github.com/yonatan2021/Bersaglio-Fin.git
-   cd Bersaglio-Fin
-   ```
+## התחלה מהירה
 
-2. התקינו תלויות (Dependencies):
-   ```bash
-   npm install
-   ```
+### 1. שיכפול והתקנה
 
-3. בנו את הפרויקט:
-   ```bash
-   npm run build
-   ```
+```bash
+git clone https://github.com/yonatan2021/Bersaglio-Fin.git
+cd Bersaglio-Fin
+npm install
+npm run build
+```
 
-4. **אופציונלי**: התקינו את פקודת ה-CLI המערכתית `fin`:
-   ```bash
-   npm install -g .
-   ```
+### 2. התקנת ה-CLI הגלובלי `fin`
 
-5. התקינו את `tsx` (TypeScript Execute) גלובלית (נדרש עבור אינטגרציה עם Claude Desktop):
-   ```bash
-   npm install -g tsx
-   ```
+```bash
+npm install -g .
+```
 
-## מיקום מסד הנתונים
+אימות: `fin --help`
 
-קובץ מסד הנתונים נשמר במיקומים הבאים, בהתאם למערכת ההפעלה שלכם:
+### 3. יצירת קובץ `.env`
 
-- **macOS:** `~/Library/Application Support/Bersaglio-Fin/database.db`
-- **Linux:** `~/.local/share/Bersaglio-Fin/database.db`
-- **Windows:** `%APPDATA%/Bersaglio-Fin/database.db`
+```bash
+cp .env.example .env
+```
 
-## הרצה ראשונית והגדרות
+לבוט הטלגרם, מלאו:
 
-1. הכינו קובץ `credentials.json` עם פרטי הגישה שלכם לספקים הפיננסיים.
-   ניתן לראות את הספקים הנתמכים ואת שדות פרטי הגישה [כאן](https://github.com/eshaham/israeli-bank-scrapers/blob/master/src/definitions.ts).
+```env
+BOT_TOKEN=הטוקן_של_הבוט_שלכם
+ALLOWED_TELEGRAM_IDS=123456789,987654321
+```
 
-2. הזינו את פרטי הגישה שלכם:
-   ```bash
-   fin setup creds -f credentials.json
-   ```
-   - תתבקשו להזין מפתח הצפנה (לפחות 6 תווים).
-   - מפתח זה **לעולם לא נשמר על הדיסק** ויש לספק אותו בכל פעם שהאפליקציה עולה.
+קבלו טוקן בוט מ-[@BotFather](https://t.me/BotFather). קבלו את מזהה הטלגרם שלכם מ-[@userinfobot](https://t.me/userinfobot).
 
-3. במהלך ההגדרה, תוכלו:
-   - להפעיל התראות עבור סטטוס הסנכרון.
-   - לבצע סריקה ראשונית של כל החשבונות.
-   - להגדיר אינטגרציה עם Claude Desktop באופן אוטומטי.
+### 4. הגדרת פרטי גישה לבנקים
 
-## שימוש
+צרו קובץ `credentials.json` (ראו `examples/` לפורמט), ואז:
+
+```bash
+fin setup creds -f credentials.json
+```
+
+תתבקשו לבחור מפתח הצפנה (לפחות 6 תווים). **מפתח זה לעולם לא נשמר על הדיסק** — תזינו אותו בכל פעם שהאפליקציה עולה.
+
+### 5. הגדרת Claude Desktop (אופציונלי)
+
+```bash
+fin setup claude
+```
+
+פקודה זו כותבת את רשומת שרת MCP לקובץ הגדרות Claude Desktop באופן אוטומטי.
+
+### 6. אתחול מסד הנתונים
+
+```bash
+fin setup db
+```
+
+### 7. הפעלת שירותים
+
+```bash
+fin start all          # שרת MCP + בוט + לוח בקרה
+```
+
+או בנפרד:
+
+```bash
+fin start mcp          # שרת MCP (HTTP, פורט 3001)
+fin start bot          # בוט טלגרם (ברקע)
+fin start dashboard    # לוח בקרה בכתובת localhost:3000
+```
+
+---
+
+## עזר `fin` CLI
+
+```bash
+fin                        # תפריט אינטראקטיבי בעברית
+fin start bot              # הפעלת בוט טלגרם (ברקע, PID ב-~/.fin/pids/)
+fin start mcp              # הפעלת שרת MCP (HTTP, פורט 3001)
+fin start dashboard        # הפעלת לוח בקרה Next.js (פורט 3000)
+fin start all              # הפעלת כל שלושת השירותים
+fin stop all               # עצירת כל השירותים
+fin restart mcp            # הפעלה מחדש של שירות ספציפי
+fin status                 # הצגת כל השירותים: פועל/עצור + זמן פעולה
+
+fin sync                   # סנכרון עסקאות מכל הבנקים המוגדרים
+
+fin setup creds -f <נתיב>  # הוספה/עדכון פרטי גישה לבנקים מקובץ JSON
+fin setup claude           # רישום שרת MCP עם Claude Desktop
+fin setup db               # אתחול או אימות מסד הנתונים
+fin setup test             # בדיקת בריאות מלאה של המערכת
+
+fin diag db                # בדיקת קישוריות מסד נתונים
+fin diag mcp               # בדיקת בריאות שרת MCP
+fin diag notify            # בדיקת התראות macOS
+```
+
+---
+
+## בוט טלגרם
+
+הפעלה: `fin start bot`
+
+| פקודה | מה עושה |
+|-------|---------|
+| `/start` | תפריט ראשי |
+| `/accounts` | רשימת חשבונות בנק מחוברים |
+| `/budget` | תקציב חודשי מול הוצאות בפועל |
+| `/report` | דוח עסקאות חודשי |
+| `/sync` | הפעלת סנכרון בנק |
+| `/add` | הוספת הוצאה ידנית |
+| `/help` | עזרה |
+| `/cancel` | ביטול פעולה נוכחית |
+
+רק מזהי טלגרם הרשומים ב-`ALLOWED_TELEGRAM_IDS` יכולים לתקשר עם הבוט.
+
+---
+
+## לוח בקרה
+
+הפעלה: `fin start dashboard` או `cd nextjs-mcp && npm run dev` ← http://localhost:3000
+
+ללוח הבקרה יש `node_modules` משלו. הריצו `cd nextjs-mcp && npm install` בשימוש ראשון.
+
+| דף | מה עושה |
+|----|---------|
+| `/` | סקירת הוצאות, קטגוריות מובילות, עסקאות אחרונות, הפעלת סנכרון |
+| `/accounts` | חיבור/הסרת בנקים, סנכרון הכל, זמן סנכרון אחרון |
+| `/budget` | קביעת מגבלות חודשיות לקטגוריה, צפייה בהתקדמות |
+| `/transactions` | רשימת עסקאות מלאה, סינון לפי תאריך, ייצוא CSV |
+| `/settings` | נעילת מסד נתונים, מידע MCP של Claude Desktop, מחיקת נתונים |
+
+---
+
+## שרת MCP
+
+לשימוש עם Claude Desktop (מצב stdio):
+
+```bash
+npm run start:mcp           # stdio — Claude Desktop בלבד
+npm run start:mcp:inspector # פתיחת כלי debug של MCP בדפדפן
+```
+
+למצב HTTP (פורט 3001): `fin start mcp`
 
 ### כלי MCP
 
-Bersaglio-Fin מספק מספר כלים עבור מארחי MCP (Claude, Hermes ועוד):
+| כלי | מה עושה |
+|-----|---------|
+| `fetchTransactions` | סריקת בנקים ועדכון מסד הנתונים המקומי |
+| `sqlQuery` | SELECT לקריאה בלבד על טבלת `transactions` |
+| `listTables` | רשימת כל טבלאות מסד הנתונים |
+| `describeTable` | עמודות ואינדקסים של טבלה |
+| `getTableSchema` | DDL מלא של טבלה |
+| `listScrapers` | רשימת סורקי בנקים מוגדרים |
+| `fetch-last-month-transactions` | פרומפט: שליפה וסיכום של החודש האחרון |
 
-- `fetchTransactions`: הפעלת סריקת בנקים ועדכון מסד הנתונים המקומי.
-- `sqlQuery`: הרצת שאילתות SELECT מאובטחות לקריאה בלבד על טבלת העסקאות.
-- `listTables` / `describeTable`: חקירת סכימת מסד הנתונים.
-- `fetch-last-month-transactions`: קבלת תצוגה מסוכמת של ההוצאות מהחודש האחרון.
+---
 
-### בוט טלגרם
+## פורמט קובץ פרטי גישה
 
-הגדירו את ה-`BOT_TOKEN` ואת ה-`ALLOWED_TELEGRAM_IDS` שלכם בקובץ `.env`, ולאחר מכן הריצו:
-```bash
-npm run start:bot
+```json
+[
+  {
+    "scraper_type": "hapoalim",
+    "friendly_name": "הפועלים שלי",
+    "credentials": {
+      "userCode": "קוד_המשתמש",
+      "password": "הסיסמה"
+    }
+  },
+  {
+    "scraper_type": "visaCal",
+    "friendly_name": "ויזה כאל",
+    "credentials": {
+      "username": "שם_משתמש",
+      "password": "סיסמה"
+    }
+  }
+]
 ```
-פקודות זמינות: `/report`, `/budget`, `/accounts`, `/sync`.
 
-## אבטחה ופרטיות
+סורקים נתמכים: `hapoalim`, `leumi`, `discount`, `mercantile`, `mizrahi`, `beinleumi`, `massad`, `otsarHahayal`, `visaCal`, `max`, `isracard`, `amex`, `yahav`, `beyhadBishvilha`.
 
-- **אחסון מקומי בגישת Zero-Trust**: כל הנתונים הפיננסיים מוצפנים במצב מנוחה באמצעות SQLCipher.
-- **מפתח בזיכרון בלבד**: מפתח ההצפנה נשמר בזיכרון בלבד ונמחק עם סיום פעולת התוכנית. הוא לעולם לא נרשם בלוגים או נשלח ברשת.
-- **אימות SQL**: וולידטור מבוסס AST מבטיח שרק שאילתות SELECT בטוחות יורצו, תוך החרגה קשיחה של טבלת פרטי הגישה (credentials) ומתן גישה לטבלת ה-`transactions` בלבד.
-- **מקומי בלבד**: שום מידע פיננסי או פרטי גישה לא עוזבים את המחשב שלכם. לא נעשה שימוש ב-LLM חיצוני (כמו OpenAI או OpenRouter) לעיבוד נתונים רגישים.
+דרישות שדות לכל סורק: [הגדרות israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers/blob/master/src/definitions.ts).
 
-## מוסכמות פיתוח
+---
 
-- **Native ESM**: הפרויקט משתמש ב-`"type": "module"`. כל ה-Imports חייבים לכלול את סיומת ה-`.js`.
-- **שירותי Singleton**: כל שירותי הליבה (Database, Scraper, Encryption) משתמשים בתבנית Singleton.
-- **תבנית Factory**: ה-`DatabaseFactory` מנהל את בחירת ה-Backend (SQLite כברירת מחדל, PostgreSQL כאופציה).
-- **טיפוסיות קשיחה**: ללא שימוש ב-`any`. מצב Strict TypeScript מופעל.
+## מסד נתונים
+
+מאוחסן ב:
+- **macOS:** `~/Library/Application Support/Asher/transactions.db`
+- **Linux:** `~/.local/share/Asher/transactions.db`
+- **Windows:** `%APPDATA%/Asher/transactions.db`
+
+מוצפן עם SQLCipher (`better-sqlite3-multiple-ciphers`). מפתח ההצפנה נמצא בזיכרון בלבד — מוזן בהפעלה, נמחק כשהתהליך מסתיים.
+
+**PostgreSQL אופציונלי:** הגדירו `DATABASE_URL=postgres://user:pass@localhost:5432/db` ב-`.env` — האפליקציה עוברת backend אוטומטית.
+
+---
+
+## אבטחה
+
+- **מפתח הצפנה בזיכרון בלבד** — לעולם לא נכתב לדיסק, לעולם לא מתועד, לעולם לא נשלח ברשת
+- **פרטי גישה חסומים מ-MCP** — טבלת `scraper_credentials` מוחרגת מרשימת ה-allowlist של `sqlQuery`
+- **אימות SQL מבוסס AST** — רק `SELECT` על טבלת `transactions` מורשה
+- **הרשאות קובץ DB** — `chmod 600` (קריאה/כתיבה לבעלים בלבד)
+- **אימות בוט** — `ALLOWED_TELEGRAM_IDS` נבדק לפני כל handler
+- **מקומי בלבד** — שום נתון פיננסי לעולם לא עוזב את המחשב שלכם
+
+ראו [doc/SECURITY.md](./doc/SECURITY.md) לדגם האיום המלא.
+
+---
+
+## פיתוח
+
+```bash
+npm run build      # קומפילציה של TypeScript
+npm run typecheck  # בדיקת טיפוסים ללא בנייה
+npm run lint       # בדיקה ותיקון סגנון קוד
+npm run format     # עיצוב עם Prettier
+npm test           # הרצת כל הבדיקות (Vitest)
+npm run test:watch # מצב צפייה
+```
+
+מבנה הפרויקט:
+
+```
+src/
+├── bot/           — בוט טלגרם (Grammy)
+├── cli/           — fin CLI (Commander.js)
+├── mcp/           — שרת MCP
+├── services/      — לוגיקה עסקית משותפת (DB, סורק, הצפנה)
+├── utils/         — לוגר, אימות SQL, התראות
+├── schemas.ts     — אימות Zod ל-14 סוגי פרטי גישה לבנקים
+└── types.ts       — טיפוסי TypeScript משותפים
+
+nextjs-mcp/        — לוח בקרה (Next.js 15, App Router, Tailwind 4)
+doc/               — תיעוד ארכיטקטורה, אבטחה, מוסכמות
+```
+
+**ESM בלבד** — `"type": "module"`. Imports צריכים סיומות `.js` (גם לקבצי `.ts`).
+
+הוקס pre-commit מריצים lint + format אוטומטית (Husky + lint-staged).
+
+---
+
+## סטק טכנולוגי
+
+| שכבה | טכנולוגיה |
+|------|-----------|
+| Runtime | Node.js 18+ |
+| שפה | TypeScript 5 (strict, ESM) |
+| מסד נתונים | SQLite + SQLCipher (`better-sqlite3-multiple-ciphers`) |
+| סריקה | [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) |
+| MCP | [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk) |
+| בוט | [grammY](https://grammy.dev/) |
+| לוח בקרה | Next.js 15, Tailwind CSS 4, App Router |
+| בדיקות | [Vitest](https://vitest.dev/) |
+| CLI | Commander.js + Inquirer |
+
+---
 
 ## קרדיטים
 
-### ייחוס (Attribution)
-Bersaglio-Fin הוא פורק (Fork) של [asher-mcp](https://github.com/shlomiuziel/asher-mcp) מאת [@shlomiuziel](https://github.com/shlomiuziel).
-כל הארכיטקטורה והעיצוב המקוריים הגיעו מ-asher-mcp.
+Bersaglio-Fin הוא פורק של [asher-mcp](https://github.com/shlomiuziel/asher-mcp) מאת [@shlomiuziel](https://github.com/shlomiuziel). הארכיטקטורה והעיצוב המקוריים הגיעו מ-asher-mcp.
+
+מתוחזק על ידי [@yonatan2021](https://github.com/yonatan2021).
+
+---
 
 ## רישיון
 
-פרויקט זה מופץ תחת רישיון MIT. ראו את קובץ ה-[LICENSE](LICENSE) לפרטים נוספים.
+MIT. ראו [LICENSE](./LICENSE).
 
-## ⚠️ הצהרת פטור מאחריות חשובה
+---
 
-**אנא קראו הצהרה זו בעיון לפני השימוש בתוכנה.**
+## הצהרת אחריות
 
-תוכנה זו נועדה לעזור לכם לנתח את הנתונים הפיננסיים שלכם ולהנגיש אותם למארחי MCP. עם זאת, בשימוש בתוכנה זו, אתם מאשרים ומסכימים לאמור להלן:
-
-1. **העדר אחריות**: תוכנה זו מסופקת "כפי שהיא" (As is), ללא אחריות מכל סוג שהוא, מפורשת או משתמעת.
-2. **אבטחת נתונים פיננסיים**: אתם האחראים הבלעדיים לאבטחת פרטי הגישה לבנקים ומפתחות ההצפנה שלכם.
-3. **השימוש על אחריותכם בלבד**: המפתחים אינם אחראים לכל הפסד כספי או אובדן נתונים. תמיד אמת את המידע הפיננסי החשוב דרך הערוצים הרשמיים של הבנק.
-4. **העדר חבות**: בשום מקרה המחברים לא יהיו אחראים לכל תביעה או נזק.
-5. **שירותי צד שלישי**: תוכנה זו משתלבת עם סורקי בנקים של צד שלישי. המפתחים אינם אחראים למדיניות שלהם.
-
-בשימוש בתוכנה זו, אתם מאשרים שקראתם הצהרה זו ואתם מסכימים לתנאיה.
+תוכנה זו מסופקת "כפי שהיא", ללא אחריות מכל סוג. אתם האחראים הבלעדיים לאבטחת פרטי הגישה לבנקים ומפתחות ההצפנה שלכם. המפתחים אינם אחראים להפסדים כספיים או אובדן נתונים. תמיד אמתו מידע פיננסי חשוב דרך הערוצים הרשמיים של הבנק. תוכנה זו משתלבת עם סורקי בנקים של צד שלישי שמדיניותם מחוץ לשליטת המפתחים.
