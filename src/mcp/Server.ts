@@ -110,7 +110,8 @@ class Server {
         });
       },
       {
-        description: 'List all tables in the database',
+        description:
+          'List all tables in the database. Expected tables: transactions, budgets, manual_transactions, scraper_credentials, sync_state.',
       }
     );
 
@@ -154,9 +155,10 @@ class Server {
         });
       },
       {
-        description: 'Execute a safe SELECT query on allowed tables',
+        description:
+          'Execute a safe SELECT-only query. Allowed tables: transactions. Columns: id, date, processedDate, description, memo, originalAmount, originalCurrency, chargedAmount, currency, category, status, type, scraper_credential_id, created_at, updated_at.',
         inputSchema: {
-          query: z.string().describe('SQL SELECT query to execute'),
+          query: z.string().describe('SQL SELECT query (transactions table only)'),
         },
       }
     );
@@ -206,23 +208,28 @@ class Server {
         return { success: true, data: { scrapers } };
       },
       {
-        description: 'List all available bank scrapers',
+        description:
+          'List all bank scraper types available in the library (not necessarily configured). To see which banks are actually connected, use getConfiguredBanks instead.',
         inputSchema: {},
       }
     );
 
     this.registerTool(
       'fetchTransactions',
-      async () => {
+      async (params: Record<string, unknown>) => {
+        const { startDate, scraperName } = params as {
+          startDate?: string;
+          scraperName?: string;
+        };
         return this.withDb(async () => {
           try {
-            // Import the ScraperService
             const { scraperService } = await import('../services/ScraperService.js');
 
-            // Fetch transactions using the ScraperService
-            const result = await scraperService.fetchAllTransactions();
+            const result = await scraperService.fetchAllTransactions({
+              overrideStartDate: startDate ? new Date(startDate) : undefined,
+              scraperName,
+            });
 
-            // Format the response
             return {
               success: result.success,
               data: {
@@ -253,8 +260,174 @@ class Server {
         });
       },
       {
-        description: 'Fetch transactions from all configured bank scrapers',
-        inputSchema: {},
+        description:
+          'Scrape and save transactions from configured bank accounts. By default fetches from last sync point (incremental). Use startDate to override, scraperName to target one bank. Check getSyncState first to avoid concurrent syncs.',
+        inputSchema: {
+          startDate: z
+            .string()
+            .optional()
+            .describe(
+              'Override start date (ISO format, e.g. "2025-01-01"). Defaults to last sync timestamp.'
+            ),
+          scraperName: z
+            .string()
+            .optional()
+            .describe(
+              'Friendly name of a specific bank to sync (from getConfiguredBanks). Defaults to all banks.'
+            ),
+        },
+      }
+    );
+
+    this.registerTool(
+      'getBudgets',
+      async () => {
+        return this.withDb(async db => {
+          const result = await db.getBudgets();
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to get budgets');
+          }
+          return { success: true, data: result.data };
+        });
+      },
+      {
+        description:
+          'Get all monthly budget limits by category. Returns {category, monthly_limit}[]. Use alongside sqlQuery on transactions to compare actual spending vs limits.',
+      }
+    );
+
+    this.registerTool(
+      'setBudget',
+      async (params: Record<string, unknown>) => {
+        const { category, monthlyLimit } = params as { category: string; monthlyLimit: number };
+        if (!category) throw new Error('category is required');
+        if (typeof monthlyLimit !== 'number') throw new Error('monthlyLimit must be a number');
+        return this.withDb(async db => {
+          const result = await db.upsertBudget(category, monthlyLimit);
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to set budget');
+          }
+          return { success: true };
+        });
+      },
+      {
+        description:
+          'Set or update a monthly budget limit for a spending category. Category should match values used in transactions (e.g. "food", "transport", "entertainment").',
+        inputSchema: {
+          category: z.string().describe('Expense category name'),
+          monthlyLimit: z.number().describe('Monthly spending limit in ILS'),
+        },
+      }
+    );
+
+    this.registerTool(
+      'getManualTransactions',
+      async (params: Record<string, unknown>) => {
+        const { startDate, endDate } = params as { startDate?: string; endDate?: string };
+        return this.withDb(async db => {
+          const result = await db.getManualTransactions(startDate, endDate);
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to get manual transactions');
+          }
+          return { success: true, data: result.data };
+        });
+      },
+      {
+        description:
+          'Get manually added transactions (cash, transfers, etc.). Returns {id, date, amount, currency, description, category, created_at}[].',
+        inputSchema: {
+          startDate: z
+            .string()
+            .optional()
+            .describe('Start date filter (ISO format, e.g. "2025-01-01")'),
+          endDate: z
+            .string()
+            .optional()
+            .describe('End date filter (ISO format, e.g. "2025-12-31")'),
+        },
+      }
+    );
+
+    this.registerTool(
+      'addManualTransaction',
+      async (params: Record<string, unknown>) => {
+        const { date, amount, currency, description, category } = params as {
+          date: string;
+          amount: number;
+          currency: string;
+          description: string;
+          category: string;
+        };
+        if (!date) throw new Error('date is required');
+        if (typeof amount !== 'number') throw new Error('amount must be a number');
+        if (!currency) throw new Error('currency is required');
+        if (!description) throw new Error('description is required');
+        if (!category) throw new Error('category is required');
+        return this.withDb(async db => {
+          const result = await db.createManualTransaction({
+            date,
+            amount,
+            currency,
+            description,
+            category,
+          });
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to create manual transaction');
+          }
+          return { success: true, data: { id: result.data } };
+        });
+      },
+      {
+        description:
+          'Add a manual transaction not tracked by bank scrapers (cash purchase, peer transfer, etc.). Amount negative for expense, positive for income.',
+        inputSchema: {
+          date: z.string().describe('Transaction date (ISO format, e.g. "2025-06-15")'),
+          amount: z.number().describe('Amount — negative for expense, positive for income'),
+          currency: z.string().describe('Currency code (e.g. "ILS", "USD")'),
+          description: z.string().describe('Transaction description'),
+          category: z.string().describe('Expense category (e.g. "food", "transport")'),
+        },
+      }
+    );
+
+    this.registerTool(
+      'getConfiguredBanks',
+      async () => {
+        return this.withDb(async db => {
+          const rows = await db.query<{
+            friendly_name: string;
+            scraper_type: string;
+            last_scraped_timestamp: string | null;
+          }>(
+            'SELECT friendly_name, scraper_type, last_scraped_timestamp FROM scraper_credentials WHERE credentials IS NOT NULL'
+          );
+          return {
+            success: true,
+            data: rows.map(r => ({
+              friendlyName: r.friendly_name,
+              scraperType: r.scraper_type,
+              lastSyncedAt: r.last_scraped_timestamp,
+            })),
+          };
+        });
+      },
+      {
+        description:
+          'List configured bank connections — friendly name, scraper type, last sync timestamp. Never returns credentials. Call this before fetchTransactions to know which banks are active and when they last synced.',
+      }
+    );
+
+    this.registerTool(
+      'getSyncState',
+      async () => {
+        return this.withDb(async db => {
+          const state = db.readSyncState();
+          return { success: true, data: state };
+        });
+      },
+      {
+        description:
+          'Get current transaction sync status. Returns {status: "idle"|"running"|"error", started_at, completed_at, results, error}. Always call this before fetchTransactions to avoid triggering a concurrent sync.',
       }
     );
 
