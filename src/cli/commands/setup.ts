@@ -2,6 +2,8 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { visualHebrew } from '../../utils/rtl.js';
 import { fileURLToPath } from 'url';
+import { writeHermesConfig, MCP_TOOLS } from '../../utils/hermesConfig.js';
+import { runEnvWizard } from './setupEnvWizard.js';
 import { ingestCredentials } from '../ingestCredentials.js';
 import { configureClaudeIntegration } from '../../utils/claudeConfig.js';
 import { DatabaseFactory } from '../../services/DatabaseFactory.js';
@@ -144,6 +146,36 @@ export async function setupTest(): Promise<void> {
     console.log(chalk.green(visualHebrew('✅ כל הבדיקות עברו')));
   } else {
     console.log(chalk.red(visualHebrew('❌ חלק מהבדיקות נכשלו')));
+    process.exit(1);
+  }
+}
+
+export async function setupEnv(opts: { dryRun?: boolean; force?: boolean } = {}): Promise<void> {
+  await runEnvWizard(opts);
+}
+
+export async function setupHermes(): Promise<void> {
+  try {
+    console.log(chalk.blue(visualHebrew('⚙️  מגדיר חיבור Hermes למסד MCP...')));
+    const { path, config } = await writeHermesConfig();
+
+    console.log(chalk.green(visualHebrew(`✅ קובץ הגדרות נוצר: ${path}`)));
+    console.log('');
+    console.log(chalk.bold('  MCP Endpoint:'), chalk.cyan(config.server.url));
+    console.log(chalk.bold('  Transport:   '), config.server.transport);
+    console.log('');
+    console.log(chalk.bold(visualHebrew('  כלים זמינים:')));
+    MCP_TOOLS.forEach(t => {
+      console.log(`    ${chalk.cyan(t.name.padEnd(22))} ${t.description}`);
+    });
+    console.log('');
+    console.log(
+      chalk.yellow(visualHebrew('  הערה: הפעל את שרת MCP לפני חיבור Hermes: ')) +
+        chalk.bold('fin start mcp')
+    );
+    process.exit(0);
+  } catch (err) {
+    console.error(chalk.red(visualHebrew(`❌ שגיאה בהגדרת Hermes: ${(err as Error).message}`)));
     process.exit(1);
   }
 }

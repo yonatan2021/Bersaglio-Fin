@@ -6,6 +6,7 @@ import { encryptionKeyService } from '../../services/EncryptionKeyService.js';
 import { PostgreSQLDatabaseService } from '../../services/PostgreSQLDatabaseService.js';
 import inquirer from 'inquirer';
 import { readPid, isAlive } from './start.js';
+import { checkMcpHttpAlive, MCP_HTTP_URL, readHermesConfig } from '../../utils/hermesConfig.js';
 
 interface NotifyOptions {
   title: string;
@@ -72,4 +73,33 @@ export async function diagMcp(): Promise<void> {
     return;
   }
   console.log(chalk.green(visualHebrew(`✅ שרת MCP פועל (PID ${pid})`)));
+}
+
+export async function diagHermes(): Promise<void> {
+  const config = await readHermesConfig();
+  if (!config) {
+    console.log(
+      chalk.yellow(visualHebrew('⚠️  קובץ הגדרות Hermes לא נמצא — הרץ: ')) +
+        chalk.bold('fin setup hermes')
+    );
+  } else {
+    console.log(chalk.green(visualHebrew(`✅ קובץ הגדרות קיים: ${config.server.url}`)));
+  }
+
+  const pid = readPid('mcp');
+  if (!pid || !isAlive(pid)) {
+    console.log(
+      chalk.red(visualHebrew('❌ שרת MCP HTTP לא פועל — הרץ: ')) + chalk.bold('fin start mcp')
+    );
+    return;
+  }
+
+  console.log(chalk.blue(visualHebrew(`🔌 בודק חיבור HTTP ל-${MCP_HTTP_URL}...`)));
+  const alive = await checkMcpHttpAlive();
+  if (alive) {
+    console.log(chalk.green(visualHebrew(`✅ שרת MCP HTTP מגיב ב-${MCP_HTTP_URL}`)));
+    console.log(chalk.green(visualHebrew('✅ Hermes יכול להתחבר')));
+  } else {
+    console.log(chalk.red(visualHebrew(`❌ שרת MCP HTTP לא מגיב ב-${MCP_HTTP_URL}`)));
+  }
 }
