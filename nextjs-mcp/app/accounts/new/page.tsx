@@ -15,10 +15,10 @@ function NewAccountInner() {
   const onSuccess = () => router.push(fromSetup ? '/setup?step=3' : '/accounts');
 
   return (
-    <div className="max-w-2xl mx-auto p-6" dir="rtl">
+    <div className="px-8 py-8 max-w-2xl" dir="rtl">
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>→ חזור</Button>
-        <h1 className="font-display text-2xl">הוסף חשבון</h1>
+        <h1 className="font-display text-[24px] font-semibold text-card-foreground">הוסף חשבון</h1>
       </div>
       {!selectedProvider ? (
         <ProviderGrid selected={selectedProvider} onSelect={setSelectedProvider} />

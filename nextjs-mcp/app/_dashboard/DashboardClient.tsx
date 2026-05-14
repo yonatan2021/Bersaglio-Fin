@@ -19,6 +19,7 @@ interface Summary {
 }
 
 const fmt = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 0 });
+const dateFmt = new Intl.DateTimeFormat('he-IL', { day: '2-digit', month: '2-digit' });
 
 export function DashboardClient() {
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -53,69 +54,71 @@ export function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen" dir="rtl">
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-        <header className="flex items-baseline justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-foreground">לוח בקרה</h1>
-            <p className="text-sm text-muted-foreground mt-1">סקירת חודש נוכחי</p>
-          </div>
-          <Button onClick={triggerSync} disabled={syncStatus === 'running'} size="sm">
-            {syncStatus === 'running' ? 'מסנכרן...' : 'סנכרן עכשיו'}
-          </Button>
-        </header>
-
-        {syncStatus === 'error' && (
-          <div className="border border-destructive/40 bg-destructive/5 text-destructive px-3 py-2 text-sm">
-            שגיאה בסנכרון. בדוק פרטי גישה ב<Link href="/accounts" className="underline">חשבונות</Link>.
-          </div>
-        )}
-
-        {/* KPI row — dense, mono amounts. Primary monthly total is the only gold element. */}
-        <div className="grid grid-cols-3 gap-px bg-border">
-          <KpiCell label="הוצאות החודש" value={loading ? '—' : fmt.format(summary?.monthlyTotal ?? 0)} highlight />
-          <KpiCell label="מספר עסקאות" value={loading ? '—' : String(summary?.transactionCount ?? 0)} />
-          <KpiCell label="קטגוריה מובילה" value={loading ? '—' : (summary?.topCategories?.[0]?.category ?? 'אחר')} />
+    <div className="px-8 py-8 space-y-8" dir="rtl">
+      <header className="flex items-baseline justify-between">
+        <div>
+          <h1 className="font-display text-[24px] font-semibold text-card-foreground">לוח בקרה</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">סקירת חודש נוכחי</p>
         </div>
+        <Button onClick={triggerSync} disabled={syncStatus === 'running'} size="sm">
+          {syncStatus === 'running' ? 'מסנכרן...' : 'סנכרן עכשיו'}
+        </Button>
+      </header>
 
-        {/* Two equal panels */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">קטגוריות מובילות</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              {summary?.topCategories.length === 0 && (
-                <p className="text-sm text-muted-foreground">אין נתונים</p>
-              )}
-              {summary?.topCategories.map(c => (
-                <div key={c.category} className="flex justify-between items-baseline border-b border-border/40 pb-1.5">
-                  <span className="text-sm">{c.category}</span>
-                  <span className="text-sm font-mono tabular-nums">{fmt.format(c.total)}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">עסקאות אחרונות</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1.5 pt-0">
-              {summary?.recentTransactions.length === 0 && (
-                <p className="text-sm text-muted-foreground">אין עסקאות</p>
-              )}
-              {summary?.recentTransactions.slice(0, 8).map((t, i) => (
-                <div key={i} className="flex justify-between items-start gap-3 border-b border-border/40 pb-1.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm truncate">{t.description}</div>
-                    <div className="text-xs text-muted-foreground">{t.friendly_name}</div>
+      {syncStatus === 'error' && (
+        <div className="border border-destructive/40 bg-destructive/5 text-destructive px-3 py-2 text-[13px]">
+          שגיאה בסנכרון. בדוק פרטי גישה ב<Link href="/accounts" className="underline">חשבונות</Link>.
+        </div>
+      )}
+
+      <div className="grid grid-cols-3 gap-px bg-border">
+        <KpiCell label="הוצאות החודש" value={loading ? '—' : fmt.format(summary?.monthlyTotal ?? 0)} highlight />
+        <KpiCell label="מספר עסקאות" value={loading ? '—' : String(summary?.transactionCount ?? 0)} />
+        <KpiCell label="קטגוריה מובילה" value={loading ? '—' : (summary?.topCategories?.[0]?.category ?? 'אחר')} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">קטגוריות מובילות</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-0 pt-0">
+            {!loading && summary?.topCategories.length === 0 && (
+              <p className="text-[13px] text-muted-foreground py-2">אין נתונים</p>
+            )}
+            {summary?.topCategories.map(c => (
+              <div key={c.category} className="flex justify-between items-baseline py-2 border-b border-border/40 last:border-0">
+                <span className="text-[13px]">{c.category}</span>
+                <span className="text-[13px] font-mono tabular-nums text-foreground">{fmt.format(c.total)}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3 flex-row items-center justify-between">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">עסקאות אחרונות</CardTitle>
+            <Link href="/transactions" className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+              הכל ←
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-0 pt-0">
+            {!loading && summary?.recentTransactions.length === 0 && (
+              <p className="text-[13px] text-muted-foreground py-2">אין עסקאות</p>
+            )}
+            {summary?.recentTransactions.slice(0, 8).map((t, i) => (
+              <div key={i} className="flex justify-between items-start gap-3 py-2 border-b border-border/40 last:border-0">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] truncate">{t.description}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {dateFmt.format(new Date(t.date))} · {t.friendly_name}
                   </div>
-                  <div className="text-sm font-mono tabular-nums whitespace-nowrap">{fmt.format(t.chargedAmount)}</div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+                <div className="text-[13px] font-mono tabular-nums whitespace-nowrap">{fmt.format(t.chargedAmount)}</div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -123,9 +126,9 @@ export function DashboardClient() {
 
 function KpiCell({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="bg-card px-4 py-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-mono tabular-nums text-xl ${highlight ? 'text-primary' : 'text-foreground'}`}>
+    <div className="bg-card px-5 py-4">
+      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`mt-2 font-mono tabular-nums ${highlight ? 'text-[28px] text-primary' : 'text-[22px] text-foreground'}`}>
         {value}
       </div>
     </div>

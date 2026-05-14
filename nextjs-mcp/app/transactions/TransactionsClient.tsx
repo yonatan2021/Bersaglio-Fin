@@ -65,67 +65,71 @@ export function TransactionsClient() {
   }
 
   return (
-    <div className="min-h-screen" dir="rtl">
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <header className="flex items-baseline justify-between mb-6">
-          <div>
-            <h1 className="font-display text-3xl">עסקאות</h1>
-            <p className="text-sm text-muted-foreground mt-1">{transactions.length} עסקאות מוצגות</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={transactions.length === 0}>
-            ייצא CSV
+    <div className="px-8 py-8" dir="rtl">
+      <header className="flex items-baseline justify-between mb-6">
+        <div>
+          <h1 className="font-display text-[24px] font-semibold text-card-foreground">עסקאות</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">{transactions.length} עסקאות מוצגות</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={transactions.length === 0}>
+          ייצא CSV
+        </Button>
+      </header>
+
+      <div className="flex flex-wrap gap-3 mb-5 items-center">
+        <div className="flex items-center gap-2">
+          <label className="text-[11px] text-muted-foreground">מ-</label>
+          <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-auto h-7 text-[13px]" />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-[11px] text-muted-foreground">עד</label>
+          <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-auto h-7 text-[13px]" />
+        </div>
+        {(startDate || endDate) && (
+          <Button variant="ghost" size="sm" onClick={() => { setStartDate(''); setEndDate(''); }} className="h-7 text-[13px]">
+            נקה
           </Button>
-        </header>
+        )}
+      </div>
 
-        <div className="flex flex-wrap gap-3 mb-4 items-center">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground">מ-</label>
-            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-auto h-8" />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground">עד</label>
-            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-auto h-8" />
-          </div>
-          {(startDate || endDate) && (
-            <Button variant="ghost" size="sm" onClick={() => { setStartDate(''); setEndDate(''); }}>נקה</Button>
-          )}
-        </div>
-
-        <div className="border border-border">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-card">
-              <tr>
-                <th className="text-start p-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">תאריך</th>
-                <th className="text-start p-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">תיאור</th>
-                <th className="text-start p-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">קטגוריה</th>
-                <th className="text-start p-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">חשבון</th>
-                <th className="text-end p-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">סכום</th>
+      <div className="border border-border">
+        <table className="w-full text-[13px]">
+          <thead className="border-b border-border bg-card">
+            <tr>
+              <th className="text-start px-4 py-2.5 font-medium text-muted-foreground text-[11px] uppercase tracking-widest">תאריך</th>
+              <th className="text-start px-4 py-2.5 font-medium text-muted-foreground text-[11px] uppercase tracking-widest">תיאור</th>
+              <th className="text-start px-4 py-2.5 font-medium text-muted-foreground text-[11px] uppercase tracking-widest">קטגוריה</th>
+              <th className="text-start px-4 py-2.5 font-medium text-muted-foreground text-[11px] uppercase tracking-widest">חשבון</th>
+              <th className="text-end px-4 py-2.5 font-medium text-muted-foreground text-[11px] uppercase tracking-widest">סכום</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {transactions.map((t, i) => (
+              <tr key={`${t.scraper_credential_id}-${t.identifier}-${i}`} className="hover:bg-card/50">
+                <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap font-mono tabular-nums text-[11px]">{t.date.split('T')[0]}</td>
+                <td className="px-4 py-2.5 max-w-xs truncate">{t.description}</td>
+                <td className="px-4 py-2.5 text-muted-foreground">{t.category ?? '—'}</td>
+                <td className="px-4 py-2.5 text-muted-foreground text-[11px]">{t.friendly_name}</td>
+                <td className="px-4 py-2.5 text-end font-mono tabular-nums whitespace-nowrap">{fmt.format(t.chargedAmount)}</td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {transactions.map((t, i) => (
-                <tr key={`${t.scraper_credential_id}-${t.identifier}-${i}`} className="hover:bg-card/50">
-                  <td className="p-3 text-muted-foreground whitespace-nowrap font-mono tabular-nums text-xs">{t.date.split('T')[0]}</td>
-                  <td className="p-3 max-w-xs truncate">{t.description}</td>
-                  <td className="p-3 text-muted-foreground">{t.category ?? '—'}</td>
-                  <td className="p-3 text-muted-foreground text-xs">{t.friendly_name}</td>
-                  <td className="p-3 text-end font-mono tabular-nums whitespace-nowrap">{fmt.format(t.chargedAmount)}</td>
-                </tr>
-              ))}
-              {transactions.length === 0 && !loading && (
-                <tr><td colSpan={5} className="p-12 text-center text-muted-foreground text-sm">אין עסקאות</td></tr>
-              )}
-            </tbody>
-          </table>
-          {loading && <div className="p-4 text-center text-muted-foreground text-sm">טוען...</div>}
-          {!loading && hasMore && transactions.length > 0 && (
-            <div className="p-3 border-t border-border text-center">
-              <Button variant="outline" size="sm" onClick={() => { const next = page + 1; setPage(next); load(next); }}>
-                טען עוד
-              </Button>
-            </div>
-          )}
-        </div>
+            ))}
+            {transactions.length === 0 && !loading && (
+              <tr>
+                <td colSpan={5} className="px-4 py-16 text-muted-foreground text-[13px]">
+                  אין עסקאות להצגה
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {loading && <div className="px-4 py-4 text-muted-foreground text-[13px]">טוען...</div>}
+        {!loading && hasMore && transactions.length > 0 && (
+          <div className="p-3 border-t border-border">
+            <Button variant="outline" size="sm" onClick={() => { const next = page + 1; setPage(next); load(next); }}>
+              טען עוד
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

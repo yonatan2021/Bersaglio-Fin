@@ -16,8 +16,12 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className="dark">
       <body className="bg-background text-foreground antialiased">
-        <Nav />
-        {children}
+        <div className="flex min-h-screen">
+          <Nav />
+          <main className="flex-1 min-w-0 overflow-auto">
+            {children}
+          </main>
+        </div>
         <UnlockModal />
       </body>
     </html>

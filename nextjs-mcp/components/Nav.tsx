@@ -3,20 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { LayoutDashboard, Building2, ReceiptText, PieChart, Settings, Lock } from 'lucide-react';
 
 const links = [
-  { href: '/', label: 'לוח בקרה' },
-  { href: '/accounts', label: 'חשבונות' },
-  { href: '/transactions', label: 'עסקאות' },
-  { href: '/budget', label: 'תקציב' },
-  { href: '/settings', label: 'הגדרות' },
+  { href: '/', label: 'לוח בקרה', icon: LayoutDashboard },
+  { href: '/accounts', label: 'חשבונות', icon: Building2 },
+  { href: '/transactions', label: 'עסקאות', icon: ReceiptText },
+  { href: '/budget', label: 'תקציב', icon: PieChart },
+  { href: '/settings', label: 'הגדרות', icon: Settings },
 ];
 
 export function Nav() {
   const pathname = usePathname();
 
-  // Hide nav on /setup (pre-DB-init context)
   if (pathname?.startsWith('/setup')) return null;
 
   async function handleLock() {
@@ -25,28 +24,41 @@ export function Nav() {
   }
 
   return (
-    <nav className="border-b border-border" dir="rtl">
-      <div className="max-w-5xl mx-auto px-6 h-12 flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <span className="font-display text-base me-4 tracking-tight">Bersaglio</span>
-          {links.map(l => {
-            const active = pathname === l.href || (l.href !== '/' && pathname?.startsWith(l.href));
-            return (
-              <Link key={l.href} href={l.href}
-                className={cn(
-                  'px-3 py-1.5 text-sm transition-colors',
-                  active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {l.label}
-              </Link>
-            );
-          })}
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleLock} className="text-muted-foreground hover:text-foreground">
-          נעל
-        </Button>
+    <aside className="w-52 flex-shrink-0 border-e border-border bg-sidebar flex flex-col">
+      <div className="px-5 pt-5 pb-6">
+        <span className="font-display text-lg font-bold text-primary tracking-tight">Bersaglio</span>
       </div>
-    </nav>
+
+      <nav className="flex-1 px-2 space-y-0.5" aria-label="ניווט ראשי">
+        {links.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || (href !== '/' && pathname?.startsWith(href));
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-2.5 px-3 py-2 text-sm rounded transition-colors duration-150',
+                active
+                  ? 'bg-secondary text-card-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+              )}
+            >
+              <Icon size={14} strokeWidth={1.75} className="flex-shrink-0" />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="p-2 border-t border-border">
+        <button
+          onClick={handleLock}
+          className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded transition-colors duration-150"
+        >
+          <Lock size={14} strokeWidth={1.75} className="flex-shrink-0" />
+          נעל
+        </button>
+      </div>
+    </aside>
   );
 }
