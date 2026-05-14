@@ -51,7 +51,10 @@ export class ScraperService {
   /**
    * Fetches transactions for all configured scrapers
    */
-  public async fetchAllTransactions(): Promise<{
+  public async fetchAllTransactions(options?: {
+    overrideStartDate?: Date;
+    scraperName?: string;
+  }): Promise<{
     success: boolean;
     results: Array<{
       scraper: string;
@@ -77,7 +80,7 @@ export class ScraperService {
         WHERE credentials IS NOT NULL
       `);
 
-      const scraperConfigsTyped = scraperConfigs as Array<{
+      let scraperConfigsTyped = scraperConfigs as Array<{
         id: number;
         scraper_type: string;
         credentials: string;
@@ -85,6 +88,12 @@ export class ScraperService {
         tags: string | null;
         last_scraped_timestamp: string | null;
       }>;
+
+      if (options?.scraperName) {
+        scraperConfigsTyped = scraperConfigsTyped.filter(
+          c => c.friendly_name === options.scraperName
+        );
+      }
 
       const results = [];
 
@@ -99,9 +108,11 @@ export class ScraperService {
           const oneYearAgo = new Date();
           oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-          const startDate = config.last_scraped_timestamp
-            ? new Date(new Date(config.last_scraped_timestamp).getTime() + 1000) // Add 1 second to avoid processing the same transaction
-            : oneYearAgo;
+          const startDate = options?.overrideStartDate
+            ? options.overrideStartDate
+            : config.last_scraped_timestamp
+              ? new Date(new Date(config.last_scraped_timestamp).getTime() + 1000) // Add 1 second to avoid processing the same transaction
+              : oneYearAgo;
 
           let credentials: any;
           try {
